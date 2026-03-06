@@ -3,9 +3,10 @@
  * Matches decrypt_info.py: F = (S0[a]+S1[b]) ^ (S2[c]+S3[d]), BE block I/O.
  */
 
-#include "bfcodec.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include "bfcodec.h"
 
 #define BF_INIT_BYTES_LEN (18 * 4 + 4 * 256 * 4)
 

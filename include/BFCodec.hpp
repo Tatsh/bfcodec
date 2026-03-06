@@ -1,10 +1,10 @@
-#ifndef BFCODEC_HPP
-#define BFCODEC_HPP
+#pragma once
 
-#include "bfcodec.h"
 #include <cstddef>
 #include <expected>
 #include <span>
+
+#include "bfcodec.h"
 
 /**
  * C++23 wrapper around the bfcodec C library.
@@ -47,5 +47,3 @@ private:
 
     C_BLOWFISH *blf_;
 };
-
-#endif /* BFCODEC_HPP */

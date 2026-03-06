@@ -1,6 +1,7 @@
-#include "BFCodec.hpp"
 #include <cstdlib>
 #include <utility>
+
+#include "BFCodec.hpp"
 
 BFCodec::BFCodec(C_BLOWFISH *blf) noexcept : blf_(blf) {
 }
