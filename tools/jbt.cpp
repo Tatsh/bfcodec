@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -35,7 +36,7 @@ bool addFileToZip(zip_t *za,
         return false;
     }
     if (!data.empty()) {
-        std::memcpy(buf, data.data(), data.size());
+        std::copy_n(data.data(), data.size(), static_cast<uint8_t *>(buf));
     }
 
     zip_source_t *src = zip_source_buffer(za, buf, data.size(), 1);
@@ -139,7 +140,7 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
 
-        std::span<std::byte> span(reinterpret_cast<std::byte *>(buf.data()), buf.size());
+        std::span<std::byte> span = std::as_writable_bytes(std::span(buf));
         auto result = codec->encrypt(span, keyIv->ivBytes);
         if (!result) {
             std::cerr << "jbt: encrypt failed for " << filePath.string() << "\n";

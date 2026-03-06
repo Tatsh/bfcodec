@@ -256,7 +256,7 @@ int main(int argc, char *argv[]) {
     std::array<std::byte, 8> iv;
     std::copy_n(ivBytes.begin(), 8, iv.begin());
 
-    std::span<std::byte> dataSpan(reinterpret_cast<std::byte *>(data.data()), data.size());
+    std::span<std::byte> dataSpan = std::as_writable_bytes(std::span(data));
     if (mode == Mode::Decode) {
         auto result = codec->decrypt(dataSpan, iv);
         if (!result) {

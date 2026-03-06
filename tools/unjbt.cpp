@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <cerrno>
 #include <cstdlib>
@@ -176,7 +177,9 @@ int main(int argc, char *argv[]) {
     size_t decryptedCount = 0;
     size_t skippedCount = 0;
     size_t pngFixedCount = 0;
+#ifdef HAVE_LIBPLIST
     size_t bplistConvertedCount = 0;
+#endif
 
     for (auto it = fs::recursive_directory_iterator(outDir);
          it != fs::recursive_directory_iterator();
@@ -199,7 +202,7 @@ int main(int argc, char *argv[]) {
 
         const size_t totalSize = raw->size();
         const size_t trailerOffset = totalSize - 8u;
-        const uint8_t *trailer = raw->data() + trailerOffset;
+        std::span<const uint8_t> trailer = std::span(*raw).subspan(trailerOffset, 8u);
         const uint32_t fileSize =
             (static_cast<uint32_t>(trailer[0]) << 24) | (static_cast<uint32_t>(trailer[1]) << 16) |
             (static_cast<uint32_t>(trailer[2]) << 8) | static_cast<uint32_t>(trailer[3]);
@@ -217,9 +220,9 @@ int main(int argc, char *argv[]) {
         const size_t storedSize = std::min<size_t>(fileSize, cipherLen);
 
         std::vector<uint8_t> plain(cipherLen);
-        std::memcpy(plain.data(), raw->data(), cipherLen);
+        std::copy_n(raw->begin(), cipherLen, plain.begin());
 
-        std::span<std::byte> span(reinterpret_cast<std::byte *>(plain.data()), cipherLen);
+        std::span<std::byte> span = std::as_writable_bytes(std::span(plain).first(cipherLen));
         auto result = codec->decrypt(span, keyIv->ivBytes);
         if (!result) {
             std::cerr << "unjbt: decrypt failed for " << path.string() << "\n";
@@ -241,7 +244,9 @@ int main(int argc, char *argv[]) {
             auto xml = tools::bplistToXml(std::span<const uint8_t>(plain.data(), plain.size()));
             if (xml) {
                 plain = std::move(*xml);
+#ifdef HAVE_LIBPLIST
                 ++bplistConvertedCount;
+#endif
             }
         }
 #endif
