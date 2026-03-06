@@ -3,6 +3,7 @@ autobuild
 autoinstall
 bemani
 bfcodec
+bfcodecpp
 bindir
 bsky
 buildsystems

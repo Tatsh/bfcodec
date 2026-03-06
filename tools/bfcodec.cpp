@@ -16,7 +16,7 @@
 
 #include <argparse/argparse.hpp>
 
-#include "BFCodec.hpp"
+#include "bfcodecpp.h"
 
 namespace {
 

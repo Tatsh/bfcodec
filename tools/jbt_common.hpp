@@ -29,7 +29,7 @@
 #include <plist/plist.h>
 #endif
 
-#include "BFCodec.hpp"
+#include "bfcodecpp.h"
 
 namespace tools {
 

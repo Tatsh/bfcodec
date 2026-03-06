@@ -21,7 +21,7 @@
       format: 'clang-format -i %s && yarn prettier -w .' % clang_format_globs,
     },
   },
-  prettierignore+: ['*.hpp', '*.inc', '*.tags'],
+  prettierignore+: ['*.cc', '*.inc', '*.tags'],
   cz+: {
     commitizen+: {
       version_files+: [

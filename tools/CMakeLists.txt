@@ -9,7 +9,7 @@ if(NOT TARGET argparse::argparse)
         include(FetchContent)
         FetchContent_Declare(argparse
             GIT_REPOSITORY https://github.com/p-ranav/argparse.git
-            GIT_TAG v2.9
+            GIT_TAG v3.2
         )
         FetchContent_MakeAvailable(argparse)
     endif()
@@ -35,6 +35,13 @@ else()
     message(FATAL_ERROR "Could not find a libzip target (tried libzip::zip, libzip::zip_shared, libzip::zip_static)")
 endif()
 
+add_executable(bfcodec bfcodec.cpp)
+target_link_libraries(bfcodec PRIVATE bfcodec_core argparse::argparse)
+set_target_properties(bfcodec PROPERTIES
+    CXX_STANDARD 23
+    CXX_EXTENSIONS OFF
+)
+
 add_executable(unjbt unjbt.cpp)
 target_link_libraries(unjbt PRIVATE bfcodec_core argparse::argparse ${libzip_target} ${plist_target})
 set_target_properties(unjbt PROPERTIES
@@ -58,6 +65,6 @@ set_target_properties(jbt PROPERTIES
     CXX_EXTENSIONS OFF
 )
 
-install(TARGETS unjbt jbt
+install(TARGETS bfcodec unjbt jbt
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

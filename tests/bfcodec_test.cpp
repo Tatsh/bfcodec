@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include "BFCodec.hpp"
+#include "bfcodecpp.h"
 
 namespace {
 
