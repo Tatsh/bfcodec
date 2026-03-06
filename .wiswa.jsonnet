@@ -20,7 +20,7 @@
       format: 'clang-format -i include/*.h* src/*.c* && yarn prettier -w .',
     },
   },
-  prettierignore+: ['*.inc', '*.tags'],
+  prettierignore+: ['*.hpp', '*.inc', '*.tags'],
   cz+: {
     commitizen+: {
       version_files+: [
