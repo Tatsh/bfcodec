@@ -5,6 +5,7 @@ bindir
 bsky
 buildsystems
 commitizen
+corefoundation
 coveragerc
 coverallsapp
 dbuild
@@ -22,11 +23,15 @@ jubeatskmpledata
 jukebeat
 libera
 libjsonnet
+libplist
 libsonnet
+libzip
 nullptr
 pavelzw
 pipx
+pngcrush
 pngdefry
+pngfix
 pytest
 reflec
 reflow
@@ -35,7 +40,9 @@ schemafile
 shellformat
 tatsh
 udvare
+unjbt
 vedantmgoyal
 winget
 wiswa
+xcrun
 yarnrc

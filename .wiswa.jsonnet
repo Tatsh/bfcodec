@@ -31,8 +31,8 @@
       ],
     },
   },
-  vcpkg: {
-    dependencies: ['argparse'],
+  vcpkg+: {
+    dependencies: ['argparse', 'libplist', 'libzip'],
   },
   vscode+: {
     c_cpp+: {

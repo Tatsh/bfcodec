@@ -3,3 +3,4 @@ project(bfcodec VERSION 1.0.0 LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 add_subdirectory(src)
+add_subdirectory(tools)

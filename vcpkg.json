@@ -1,5 +1,5 @@
 {
-  "dependencies": ["argparse"],
+  "dependencies": ["argparse", "libplist", "libzip"],
   "description": "C/C++ library to decrypt BFCodec-encrypted content.",
   "documentation": "https://bfcodec.readthedocs.org",
   "homepage": "https://tatsh.github.io/bfcodec/",
