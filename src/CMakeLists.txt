@@ -13,6 +13,12 @@ set_target_properties(bfcodec_core PROPERTIES
 	CXX_EXTENSIONS OFF
 )
 
+if(BFCODEC_APPLY_WARN_ALL)
+	target_compile_options(bfcodec_core PRIVATE
+		${BFCODEC_WARN_ALL_C_FLAGS}
+		${BFCODEC_WARN_ALL_CXX_FLAGS})
+endif()
+
 install(TARGETS bfcodec_core
 	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

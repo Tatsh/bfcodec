@@ -24,5 +24,9 @@ set_target_properties(bfcodec_test PROPERTIES
   CXX_EXTENSIONS OFF
 )
 
+if(BFCODEC_APPLY_WARN_ALL)
+	target_compile_options(bfcodec_test PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
+endif()
+
 include(GoogleTest)
 gtest_discover_tests(bfcodec_test)

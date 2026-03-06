@@ -65,6 +65,43 @@ set_target_properties(jbt PROPERTIES
     CXX_EXTENSIONS OFF
 )
 
+if(BFCODEC_APPLY_WARN_ALL)
+	target_compile_options(bfcodec PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
+	target_compile_options(unjbt PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
+	target_compile_options(jbt PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
+endif()
+
 install(TARGETS bfcodec unjbt jbt
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+install(FILES ${CMAKE_SOURCE_DIR}/README.md ${CMAKE_SOURCE_DIR}/LICENSE.txt TYPE DOC)
+
+if(WIN32)
+    set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
+    set(CPACK_NSIS_DISPLAY_NAME "bfcodec")
+    set(CPACK_NSIS_PACKAGE_NAME "bfcodec")
+    set(CPACK_PACKAGE_EXECUTABLES "bfcodec;bfcodec" "jbt;jbt" "unjbt;unjbt")
+    set(CPACK_GENERATOR NSIS ZIP)
+else()
+    set(CPACK_GENERATOR ZIP)
+endif()
+set(CPACK_PACKAGE_VENDOR "bfcodec")
+set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/LICENSE.txt)
+set(__cpack_system_name ${CMAKE_SYSTEM_NAME})
+if(__cpack_system_name MATCHES "Windows")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(__cpack_system_name win64)
+    else()
+        set(__cpack_system_name win32)
+    endif()
+elseif(APPLE)
+    if(CMAKE_APPLE_SILICON_PROCESSOR)
+        set(__cpack_system_name Darwin-arm64)
+    else()
+        set(__cpack_system_name Darwin-x86_64)
+    endif()
+endif()
+set(CPACK_PACKAGE_FILE_NAME
+    ${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${__cpack_system_name}-${CMAKE_BUILD_TYPE})
+set(CPACK_THREADS 0)
+include(CPack)
