@@ -6,21 +6,26 @@
 
 #include "bfcodec.h"
 
-/**
- * C++23 wrapper around the bfcodec C library.
- * Use create() to obtain a codec; expandKey() and decrypt() return std::expected.
- */
+/** Error codes for BFCodec operations. */
 enum class BFCodecError {
-    InitFailed,
-    InvalidCodec,
-    DataSizeNotMultipleOf8,
+    InitFailed,             /**< bfcodec_init() failed (e.g. allocation failure). */
+    InvalidCodec,           /**< Codec instance is invalid (e.g. moved-from). */
+    DataSizeNotMultipleOf8, /**< Data length is not a multiple of 8 bytes. */
 };
 
+/**
+ * @brief C++23 wrapper around the bfcodec C library.
+ *
+ * Use create() to obtain a codec; expandKey(), decrypt(), and encrypt() return std::expected.
+ */
 class BFCodec {
 public:
     BFCodec() = delete;
 
-    /** Create codec (calls bfcodec_init()). */
+    /**
+     * @brief Create a codec instance (calls bfcodec_init()).
+     * @return The codec on success, or std::unexpected(BFCodecError::InitFailed) on failure.
+     */
     static std::expected<BFCodec, BFCodecError> create();
 
     BFCodec(const BFCodec &) = delete;
@@ -31,14 +36,28 @@ public:
 
     ~BFCodec();
 
-    /** Expand key (calls bfcodec_expand_key). */
+    /**
+     * @brief Expand key into the codec state (calls bfcodec_expand_key).
+     * @param key Key bytes; may be any non-empty length.
+     * @return void on success, or std::unexpected(BFCodecError) on failure.
+     */
     std::expected<void, BFCodecError> expandKey(std::span<const std::byte> key);
 
-    /** Decrypt data in place with CBC. data.size() must be a multiple of 8; iv must be 8 bytes. */
+    /**
+     * @brief Decrypt data in place with CBC.
+     * @param data Buffer to decrypt; data.size() must be a multiple of 8.
+     * @param iv Initialization vector; must be exactly 8 bytes.
+     * @return void on success, or std::unexpected(BFCodecError) on failure.
+     */
     std::expected<void, BFCodecError> decrypt(std::span<std::byte> data,
                                               std::span<const std::byte, 8> iv);
 
-    /** Encrypt data in place with CBC. data.size() must be a multiple of 8; iv must be 8 bytes. */
+    /**
+     * @brief Encrypt data in place with CBC.
+     * @param data Buffer to encrypt; data.size() must be a multiple of 8.
+     * @param iv Initialization vector; must be exactly 8 bytes.
+     * @return void on success, or std::unexpected(BFCodecError) on failure.
+     */
     std::expected<void, BFCodecError> encrypt(std::span<std::byte> data,
                                               std::span<const std::byte, 8> iv);
 
