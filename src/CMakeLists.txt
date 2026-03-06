@@ -1,0 +1,26 @@
+add_library(bfcodec
+	bfcodec.c
+	BFCodec.cpp
+)
+
+target_include_directories(bfcodec PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+set_target_properties(bfcodec PROPERTIES
+	CXX_STANDARD 23
+	CXX_EXTENSIONS OFF
+)
+
+install(TARGETS bfcodec
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(FILES
+	${CMAKE_SOURCE_DIR}/include/bfcodec.h
+	${CMAKE_SOURCE_DIR}/include/BFCodec.hpp
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
