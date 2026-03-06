@@ -149,21 +149,24 @@ def _init_boxes() -> tuple:
         "b6cbcf7ccd769c2b53113ec01640e3d338abbd602547adf0ba38209cf746ce76"
         "77afa1c52075606085cbfe4e8ae88dd87aaaf9b04cf9aa7e1948c25c02fb8a8c"
         "01c36ae4d6ebe1f990d4f869a65cdea03f09252dc208e69fb74e6132ce77e25b"
-        "578fdfe33ac372e6"
-    )
-    p = [int.from_bytes(raw[i * 4 : (i + 1) * 4], "big") for i in range(18)]
-    s = [int.from_bytes(raw[(18 + i) * 4 : (18 + i + 1) * 4], "big") for i in range(1024)]
+        "578fdfe33ac372e6")
+    p = [int.from_bytes(raw[i * 4:(i + 1) * 4], "big") for i in range(18)]
+    s = [
+        int.from_bytes(raw[(18 + i) * 4:(18 + i + 1) * 4], "big")
+        for i in range(1024)
+    ]
     return p, s
 
 
 P_INIT, S_INIT = _init_boxes()
 
-
 # --- From dump.S: sub_405290 reads 4 bytes big-endian; sub_405300 decrypts one block ---
+
 
 def bytes_to_u32_be(b: bytes, offset: int) -> int:
     """Read 4 bytes big-endian (sub_405290: byte0<<24 | byte1<<16 | byte2<<8 | byte3)."""
-    return (b[offset] << 24) | (b[offset + 1] << 16) | (b[offset + 2] << 8) | b[offset + 3]
+    return (b[offset] << 24) | (b[offset + 1] << 16) | (
+        b[offset + 2] << 8) | b[offset + 3]
 
 
 def u32_to_bytes_be(x: int) -> bytes:
@@ -175,7 +178,7 @@ class CustomBlowfish:
 
     def __init__(self, p_init: list, s_init: list):
         self.P = list(p_init)
-        self.S = [list(s_init[i * 256 : (i + 1) * 256]) for i in range(4)]
+        self.S = [list(s_init[i * 256:(i + 1) * 256]) for i in range(4)]
 
     def _F(self, x: int) -> int:
         """F: (S1[a] + S2[b]) ^ (S3[c] + S4[d]), x = a<<24|b<<16|c<<8|d (dump.S sub_404DA0 / sub_405300)."""
@@ -183,7 +186,8 @@ class CustomBlowfish:
         b = (x >> 16) & 0xFF
         c = (x >> 8) & 0xFF
         d = x & 0xFF
-        return ((self.S[0][a] + self.S[1][b]) ^ (self.S[2][c] + self.S[3][d])) & 0xFFFFFFFF
+        return ((self.S[0][a] + self.S[1][b]) ^
+                (self.S[2][c] + self.S[3][d])) & 0xFFFFFFFF
 
     def expand_key(self, key: bytes):
         """Key schedule (sub_404E30): XOR P then S with key (big-endian 32-bit chunks), then expand via encrypt."""
@@ -192,12 +196,10 @@ class CustomBlowfish:
             return
         j = 0
         for i in range(18):
-            k = (
-                (key[j % key_len] << 24)
-                | (key[(j + 1) % key_len] << 16)
-                | (key[(j + 2) % key_len] << 8)
-                | key[(j + 3) % key_len]
-            )
+            k = ((key[j % key_len] << 24)
+                 | (key[(j + 1) % key_len] << 16)
+                 | (key[(j + 2) % key_len] << 8)
+                 | key[(j + 3) % key_len])
             self.P[i] ^= k
             j += 4
         L, R = 0, 0
@@ -239,7 +241,7 @@ def cbc_decrypt(bf, ciphertext, iv):
     prev = iv
     plain = []
     for i in range(0, len(ciphertext), 8):
-        block = ciphertext[i : i + 8]
+        block = ciphertext[i:i + 8]
         L = bytes_to_u32_be(block, 0)
         R = bytes_to_u32_be(block, 4)
         left, right = bf.decrypt_block(L, R)
@@ -258,17 +260,30 @@ def main():
     # - REFLEC BEAT plus - 'Konami ReflecBeat For iOS.'
     # - Unknown - REFLEC BEAT US version
     # - Unknown - Pop'n Rhythmin
-    parser = argparse.ArgumentParser(description="Decrypt Jubeat Plus info files (custom Blowfish CBC).")
+    parser = argparse.ArgumentParser(
+        description="Decrypt Jubeat Plus info files (custom Blowfish CBC).")
     parser.add_argument("file", type=Path, help="Input encrypted file")
-    parser.add_argument("-o", "--output", type=Path, default=None, help="Output file (default: <file>.dec)")
-    parser.add_argument("-k", "--key", type=str, default="Konami Bemani Mobile iPad",
+    parser.add_argument("-o",
+                        "--output",
+                        type=Path,
+                        default=None,
+                        help="Output file (default: <file>.dec)")
+    parser.add_argument("-k",
+                        "--key",
+                        type=str,
+                        default="Konami Bemani Mobile iPad",
                         help="Key string (MD5-hashed); default: %(default)r")
-    parser.add_argument("-P", "--fix-pngs", action="store_true",
-                        help="Convert Apple-crushed PNGs (CgBI) to standard PNGs using pngdefry")
+    parser.add_argument(
+        "-P",
+        "--fix-pngs",
+        action="store_true",
+        help="Convert Apple-crushed PNGs (CgBI) to standard PNGs using pngdefry"
+    )
     args = parser.parse_args()
 
     in_path = args.file.resolve()
-    out_path = args.output.resolve() if args.output is not None else Path(str(in_path) + ".dec")
+    out_path = args.output.resolve() if args.output is not None else Path(
+        str(in_path) + ".dec")
 
     if not in_path.exists():
         raise SystemExit(f"Input file not found: {in_path}")
@@ -292,7 +307,9 @@ def main():
     out = cbc_decrypt(bf, ciphertext, iv)[:stored_size]
 
     out_path.write_bytes(out)
-    print(f"file_size={file_size} block_size={block_size} -> wrote {out_path} ({len(out)} bytes)")
+    print(
+        f"file_size={file_size} block_size={block_size} -> wrote {out_path} ({len(out)} bytes)"
+    )
     if out[:6] == b"bplist":
         print("Valid binary plist header.")
     else:
@@ -306,12 +323,17 @@ def main():
                 try:
                     bn = Path(out_path).name
                     print('pngdefry', '-o', tmp_path, out_path)
-                    result = subprocess.run(["pngdefry", "-o", str(tmp_path), str(out_path)])
+                    result = subprocess.run(
+                        ["pngdefry", "-o",
+                         str(tmp_path),
+                         str(out_path)])
                     if result.returncode == 0:
                         shutil.move(str(tmp_path + '/' + bn), str(out_path))
                         print(f"Fixed Apple-crushed PNG: {out_path}")
                     else:
-                        print(f"pngdefry failed (rc={result.returncode}): {result.stderr.strip()}")
+                        print(
+                            f"pngdefry failed (rc={result.returncode}): {result.stderr.strip()}"
+                        )
                         tmp_path.unlink(missing_ok=True)
                 except subprocess.CalledProcessError as e:
                     print(f"pngdefry error: {e}")
