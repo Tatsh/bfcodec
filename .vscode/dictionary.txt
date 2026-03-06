@@ -10,13 +10,17 @@ commitizen
 corefoundation
 coveragerc
 coverallsapp
+ctest
 dbuild
+dcmake
+dcoverage
 docstrings
 dwords
 esbenp
 foxundermoon
 gmock
 includedir
+interprocedural
 iwyu
 jsonnet
 jsonschema
@@ -50,3 +54,4 @@ xcrun
 yarnrc
 zipcmp
 zipmerge
+ziptool

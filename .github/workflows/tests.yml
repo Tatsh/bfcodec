@@ -1,52 +1,53 @@
+---
 jobs:
-  test:
-    env:
-      GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-    runs-on: 'ubuntu-latest'
+  tests:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
     steps:
-      - uses: 'actions/checkout@v6'
-      - name: 'Install Poetry'
-        run: 'pipx install poetry'
-      - name: 'Set up Python ${{ matrix.python-version }}'
-        uses: 'actions/setup-python@v6'
+      - uses: actions/checkout@v6
         with:
-          cache: 'poetry'
-          python-version: '${{ matrix.python-version }}'
-      - name: 'Install dependencies (Poetry)'
-        run: 'poetry install --with=tests'
-      - name: 'Install pytest-action dependencies'
-        run: 'poetry run pip install pytest-md pytest-emoji'
-      - name: 'Install dependencies (Yarn)'
-        run: 'yarn'
-      - name: 'Run tests'
-        uses: 'pavelzw/pytest-action@v2'
-        with:
-          click-to-expand: true
-          custom-arguments: '--cov . --cov-branch --cov-report term-missing:skip-covered --cov-report xml'
-          custom-pytest: 'yarn test'
-          emoji: true
-          job-summary: true
-          report-title: 'Test Report'
-          verbose: true
-      - name: 'Coverage'
-        uses: 'coverallsapp/github-action@v2'
-        with:
-          file: 'coverage.xml'
+          fetch-depth: 0
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libplist-dev libzip-dev zipcmp zipmerge ziptool
+      - name: Configure
+        run: >-
+          cmake -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -B ${{github.workspace}}/build
+          --install-prefix ${{github.workspace}}/build/prefix
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
+          -DBUILD_TESTS=ON
+          -DCOVERAGE=ON
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --verbose --config ${{matrix.build-type}}
+      - name: Install
+        run: cmake --install ${{github.workspace}}/build --config ${{matrix.build-type}} --verbose
+      - name: Run tests
+        run: ctest --test-dir ${{github.workspace}}/build/tests
+      - if: ${{ matrix.build-type == 'Debug' }}
+        name: Generate coverage information
+        run: >-
+          lcov -c -d ${{github.workspace}}/build -o coverage1.lcov
+          --exclude build
+          --omit-lines '^\}$'
+          --exclude tests
+          --include src
+          --keep-going
+      - if: ${{ matrix.build-type == 'Debug' }}
+        name: Coveralls
+        uses: coverallsapp/github-action@v2
     strategy:
+      fail-fast: false
       matrix:
-        python-version:
-          - '3.10'
-          - '3.11'
-          - '3.12'
-          - '3.13'
-          - '3.14'
-name: 'Tests'
+        build-type: [Debug, Release]
+name: Tests
 'on':
   pull_request:
     branches:
-      - 'master'
+      - master
   push:
     branches:
-      - 'master'
+      - master
 permissions:
   contents: 'read'
