@@ -13,8 +13,8 @@ extern "C" {
  * All fields are private; use only via bfcodec_* functions.
  */
 typedef struct C_BLOWFISH {
-	uint32_t p[18];
-	uint32_t s[4][256];
+    uint32_t p[18];
+    uint32_t s[4][256];
 } C_BLOWFISH;
 
 /**
