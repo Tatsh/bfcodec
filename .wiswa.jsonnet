@@ -31,6 +31,9 @@
       ],
     },
   },
+  vcpkg: {
+    dependencies: ['argparse'],
+  },
   vscode+: {
     c_cpp+: {
       configurations: [
