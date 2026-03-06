@@ -33,7 +33,5 @@ schemafile
 shellformat
 tatsh
 udvare
-vedantmgoyal
-winget
 wiswa
 yarnrc
