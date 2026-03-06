@@ -1,6 +1,7 @@
 # How to contribute to bfcodec
 
-Thank you for your interest in contributing to bfcodec! Please follow these guidelines to help maintain code quality and consistency.
+Thank you for your interest in contributing to bfcodec! Please follow these guidelines to help
+maintain code quality and consistency.
 
 ## General Guidelines
 
@@ -81,7 +82,3 @@ locally or allowing Dependabot to do them.
 
 [C++ instructions]: .github/instructions/cpp.instructions.md
 [Markdown instructions]: .github/instructions/markdown.instructions.md
-[Python instructions]: .github/instructions/python.instructions.md
-[Python tests instructions]: .github/instructions/python-tests.instructions.md
-[JSON/YAML guidelines]: .github/instructions/json-yaml.instructions.md
-[TOML/INI guidelines]: .github/instructions/toml-ini.instructions.md
