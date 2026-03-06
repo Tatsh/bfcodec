@@ -1,0 +1,67 @@
+.\" Copyright (c) 2026 bfcodec authors. License: MIT.
+.Dd March 2026
+.Dt JBT 1
+.Os
+.Sh NAME
+.Nm jbt
+.Nd create a .jbt/.rb/.orb archive by encrypting files with BFCodec
+.Sh SYNOPSIS
+.Nm
+.Op Fl K Ar key | Fl -key Ar key | Fl -key-file Ar path
+.Op Fl -iv Ar iv | Fl -iv-file Ar path
+.Ar indir
+.Ar archive
+.Sh DESCRIPTION
+.Nm
+creates a ZIP-based archive
+.Pa .jbt ,
+.Pa .rb ,
+or
+.Pa .orb
+by recursively reading all regular files under
+.Ar indir ,
+encrypting each file with the BFCodec cipher (Blowfish-derived, CBC),
+and storing the encrypted data plus an 8-byte trailer (original size and
+block size) in the archive under the same relative path names.
+.Pp
+Key and IV are required.
+They can be given as hex strings
+.Pq Fl K Ns / Ns Fl -key ,
+.Fl -iv
+(spaces ignored) or as raw binary files
+.Pq Fl -key-file ,
+.Fl -iv-file .
+A key file must be exactly 16 bytes; an IV file must be exactly 8 bytes.
+The IV as hex must be 16 hex digits (8 bytes).
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl K , Fl -key Ar key
+Use
+.Ar key
+as the cipher key (hex string; spaces ignored).
+Mutually exclusive with
+.Fl -key-file .
+.It Fl -key-file Ar path
+Read the key from the binary file
+.Ar path
+(exactly 16 bytes).
+Mutually exclusive with
+.Fl -key .
+.It Fl -iv Ar iv
+Use
+.Ar iv
+as the initialization vector (16 hex digits = 8 bytes; spaces ignored).
+Mutually exclusive with
+.Fl -iv-file .
+.It Fl -iv-file Ar path
+Read the IV from the binary file
+.Ar path
+(exactly 8 bytes).
+Mutually exclusive with
+.Fl -iv .
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr bfcodec 1 ,
+.Xr unjbt 1

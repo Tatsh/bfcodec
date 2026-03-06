@@ -1,0 +1,88 @@
+.\" Copyright (c) 2026 bfcodec authors. License: MIT.
+.Dd March 2026
+.Dt BFCODEC 1
+.Os
+.Sh NAME
+.Nm bfcodec
+.Nd encode or decode files using BFCodec (Blowfish-derived) cipher with CBC
+.Sh SYNOPSIS
+.Nm
+.Op Fl K Ar key | Fl -key Ar key | Fl -key-file Ar path
+.Op Fl -iv Ar iv | Fl -iv-file Ar path
+.Op Fl -text
+.Op Fl S Ar n | Fl -output-size Ar n
+.Ar mode
+.Ar infile
+.Op Ar outfile
+.Sh DESCRIPTION
+.Nm
+encrypts or decrypts a single file using the BFCodec cipher in CBC mode.
+The cipher is Blowfish-derived with custom P/S boxes.
+.Pp
+.Ar mode
+must be
+.Sy dec
+(decrypt) or
+.Sy enc
+(encrypt).
+.Ar infile
+is the path to the input file; its size must be a multiple of 8 bytes.
+.Ar outfile
+is optional: if omitted or given as
+.Sq - ,
+output is written to standard output.
+Writing binary data to a terminal is refused unless
+.Fl -text
+is set.
+.Pp
+Key and IV can be supplied as hex strings
+.Pq Fl K Ns / Ns Fl -key ,
+.Fl -iv
+with spaces ignored, or as raw binary files
+.Pq Fl -key-file ,
+.Fl -iv-file .
+A key file must be exactly 16 bytes; an IV file must be exactly 8 bytes.
+The IV given as hex must be 16 hex digits (8 bytes).
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl K , Fl -key Ar key
+Use
+.Ar key
+as the cipher key (hex string; spaces ignored).
+Mutually exclusive with
+.Fl -key-file .
+.It Fl -key-file Ar path
+Read the key from the binary file
+.Ar path
+(exactly 16 bytes).
+Mutually exclusive with
+.Fl -key .
+.It Fl -iv Ar iv
+Use
+.Ar iv
+as the initialization vector (16 hex digits = 8 bytes; spaces ignored).
+Mutually exclusive with
+.Fl -iv-file .
+.It Fl -iv-file Ar path
+Read the IV from the binary file
+.Ar path
+(exactly 8 bytes).
+Mutually exclusive with
+.Fl -iv .
+.It Fl -text
+Allow binary output to be written to a terminal (stdout).
+.It Fl S , Fl -output-size Ar n
+.Pq dec only
+If the decrypted payload is larger than
+.Ar n
+bytes, trim the output to
+.Ar n
+bytes.
+.Ar n
+must be non-negative.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr jbt 1 ,
+.Xr unjbt 1
