@@ -1,34 +1,42 @@
+---
+env:
+  CODEQL_EXTRACTOR_CPP_AUTOINSTALL_DEPENDENCIES: 'false'
 jobs:
   analyze:
-    name: 'Analyze'
+    name: analyse
     permissions:
-      actions: 'read'
-      contents: 'read'
-      security-events: 'write'
-    runs-on: 'ubuntu-latest'
+      actions: read
+      contents: read
+      security-events: write
+    runs-on: ubuntu-latest
     steps:
-      - name: 'Checkout repository'
-        uses: 'actions/checkout@v6'
-      - name: 'Initialize CodeQL'
-        uses: 'github/codeql-action/init@v4'
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
-          languages: '${{ matrix.language }}'
-      - name: 'Perform CodeQL Analysis'
-        uses: 'github/codeql-action/analyze@v4'
+          fetch-depth: 0
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libplist-dev libzip-dev zipcmp zipmerge
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
         with:
-          category: '/language:${{matrix.language}}'
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{matrix.language}}
     strategy:
       fail-fast: false
       matrix:
-        language:
-          - 'cpp'
-name: 'CodeQL'
+        language: ['cpp']
+name: CodeQL
 'on':
   pull_request:
-    branches:
-      - 'master'
+    branches: ['master']
   push:
-    branches:
-      - 'master'
+    branches: ['master']
   schedule:
-    - cron: '15 4 * * 3'
+    - cron: 42 10 * * 4

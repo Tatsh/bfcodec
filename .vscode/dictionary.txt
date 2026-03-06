@@ -1,4 +1,6 @@
 argparse
+autobuild
+autoinstall
 bemani
 bfcodec
 bindir
@@ -46,3 +48,5 @@ winget
 wiswa
 xcrun
 yarnrc
+zipcmp
+zipmerge
