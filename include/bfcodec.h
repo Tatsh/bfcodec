@@ -11,12 +11,10 @@ extern "C" {
 /**
  * @brief Blowfish codec state (custom P/S boxes, pi-derived).
  *
- * All fields are private; use only via bfcodec_* functions.
+ * Opaque type.
  */
-typedef struct C_BLOWFISH {
-    uint32_t p[18];
-    uint32_t s[4][256];
-} C_BLOWFISH;
+struct C_BLOWFISH;
+typedef struct C_BLOWFISH C_BLOWFISH;
 
 /**
  * @brief Allocate and initialize a Blowfish codec with pi-derived P and S boxes.
