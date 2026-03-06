@@ -1,0 +1,27 @@
+jobs:
+  qa:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: 'actions/checkout@v6'
+      - name: 'Yarn cache'
+        uses: 'actions/cache@v5'
+        with:
+          key: "${{ runner.os }}-yarn-${{ hashFiles('yarn.lock', '.yarnrc.yml') }}"
+          path: '~/.yarn/berry'
+          restore-keys: '${ runner.os }}-yarn'
+      - name: 'Install dependencies (Yarn)'
+        run: 'yarn'
+      - name: 'Check formatting'
+        run: 'yarn check-formatting'
+      - name: 'Check spelling'
+        run: 'yarn check-spelling'
+name: 'QA'
+'on':
+  pull_request:
+    branches:
+      - 'master'
+  push:
+    branches:
+      - 'master'
+permissions:
+  contents: 'read'

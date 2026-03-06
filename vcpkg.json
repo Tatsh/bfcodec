@@ -1,0 +1,10 @@
+{
+  "dependencies": [],
+  "description": "C/C++ library to decrypt BFCodec-encrypted content",
+  "documentation": "https://bfcodec.readthedocs.org",
+  "homepage": "https://tatsh.github.io/bfcodec/",
+  "license": "MIT",
+  "maintainers": ["Andrew Udvare <audvare@gmail.com>"],
+  "name": "bfcodec",
+  "version": "0.0.0"
+}

@@ -1,0 +1,115 @@
+{
+  "contributors": ["Andrew Udvare <audvare@gmail.com>"],
+  "cspell": {
+    "cache": {
+      "useCache": true
+    },
+    "dictionaryDefinitions": [
+      {
+        "name": "main",
+        "path": ".vscode/dictionary.txt"
+      }
+    ],
+    "enableFileTypes": {
+      "*": true
+    },
+    "enableGlobDot": true,
+    "files": ["*"],
+    "ignorePaths": [
+      "*.1",
+      "*.har",
+      "*.lock",
+      ".git/**",
+      ".yarn/**/*.cjs",
+      ".vscode/extensions.json",
+      "dist/**",
+      "man/**",
+      ".docs/*.tags",
+      ".docs/*.tag.xml"
+    ],
+    "language": "en-GB",
+    "languageSettings": [
+      {
+        "dictionaries": ["main"],
+        "languageId": "*"
+      }
+    ],
+    "useGitignore": true
+  },
+  "description": "C/C++ library to decrypt BFCodec-encrypted content",
+  "devDependencies": {
+    "@prettier/plugin-xml": "^3.4.2",
+    "cspell": "^9.7.0",
+    "markdownlint-cli2": "^0.21.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-ini": "^1.3.0",
+    "prettier-plugin-sort-json": "^4.2.0",
+    "prettier-plugin-toml": "^2.0.6"
+  },
+  "files": ["LICENSE.txt", "README.md"],
+  "homepage": "https://tatsh.github.io/bfcodec/",
+  "keywords": ["ios", "konami", "jubeat", "jukebeat", "reflec beat"],
+  "license": "MIT",
+  "markdownlint-cli2": {
+    "config": {
+      "MD024": {
+        "siblings_only": true
+      },
+      "MD033": {
+        "allowed_elements": ["kbd"]
+      },
+      "default": true,
+      "line-length": {
+        "code_blocks": false,
+        "line_length": 100,
+        "tables": false
+      }
+    },
+    "gitignore": true,
+    "globs": ["**/*.md", "**/*.mdc"],
+    "noBanner": true,
+    "showFound": true
+  },
+  "name": "bfcodec",
+  "packageManager": "yarn@4.13.0",
+  "prettier": {
+    "endOfLine": "lf",
+    "iniSpaceAroundEquals": true,
+    "jsonRecursiveSort": true,
+    "overrides": [
+      {
+        "files": ["package.json"],
+        "options": {
+          "parser": "json"
+        }
+      },
+      {
+        "files": [".clang-format"],
+        "options": {
+          "parser": "yaml"
+        }
+      }
+    ],
+    "plugins": [
+      "@prettier/plugin-xml",
+      "prettier-plugin-ini",
+      "prettier-plugin-sort-json",
+      "prettier-plugin-toml"
+    ],
+    "printWidth": 100,
+    "reorderKeys": true,
+    "singleQuote": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Tatsh/bfcodec.git"
+  },
+  "scripts": {
+    "build": "cmake --preset=default -DBUILD_DOCS=ON && cmake --build build",
+    "check-formatting": "clang-format -n include/*.h* src/*.cpp src/*.h && prettier -c . && markdownlint-cli2",
+    "check-spelling": "cspell --no-progress .",
+    "format": "clang-format -i include/*.h* src/*.c* && yarn prettier -w .",
+    "qa": "yarn check-spelling && yarn check-formatting"
+  },
+  "version": "0.0.0"
+}

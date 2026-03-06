@@ -1,0 +1,17 @@
+*.info
+*.kate-swp
+*.log
+*~
+.*.swp
+.*_cache/
+.DS_Store*
+.coverage
+.cspellcache
+.directory
+.pnp.*
+/.yarn/install-state.gz
+/CMakeUserPresets.json
+/build/
+/dist/
+/vcpkg_installed/
+node_modules/
