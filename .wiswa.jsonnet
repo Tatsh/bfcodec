@@ -2,7 +2,7 @@
   security_policy_supported_versions: { '0.0.x': ':white_check_mark:' },
   project_name: 'bfcodec',
   version: '0.0.0',
-  description: 'C/C++ library to decrypt BFCodec-encrypted content',
+  description: 'C/C++ library to decrypt BFCodec-encrypted content.',
   keywords: ['ios', 'konami', 'jubeat', 'jukebeat', 'reflec beat'],
   want_main: false,
   copilot+: {
@@ -15,9 +15,10 @@
         '.docs/*.tag.xml',
       ],
     },
+    local clang_format_globs = 'include/*.h src/*.c*',
     scripts+: {
-      'check-formatting': 'clang-format -n include/*.h* src/*.cpp src/*.h && prettier -c . && markdownlint-cli2',
-      format: 'clang-format -i include/*.h* src/*.c* && yarn prettier -w .',
+      'check-formatting': 'clang-format -n %s && prettier -c . && markdownlint-cli2' % clang_format_globs,
+      format: 'clang-format -i %s && yarn prettier -w .' % clang_format_globs,
     },
   },
   prettierignore+: ['*.hpp', '*.inc', '*.tags'],

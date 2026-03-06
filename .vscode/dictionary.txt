@@ -19,6 +19,7 @@ jsonschema
 jubeat
 jubeatskmpledata
 jukebeat
+libera
 libjsonnet
 libsonnet
 nullptr
@@ -33,5 +34,7 @@ schemafile
 shellformat
 tatsh
 udvare
+vedantmgoyal
+winget
 wiswa
 yarnrc
