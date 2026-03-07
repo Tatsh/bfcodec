@@ -1,6 +1,7 @@
 # Copilot Instructions
 
-BFCodec is a C/C++ library to decrypt BFCodec-encrypted content as seen in iOS BEMANI games.
+BFCodec is a set of tools and a C/C++ library to decrypt BFCodec-encrypted content as seen in
+Android/iOS BEMANI games.
 
 ## General
 

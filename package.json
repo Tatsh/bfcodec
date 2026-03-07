@@ -36,7 +36,7 @@
     ],
     "useGitignore": true
   },
-  "description": "C/C++ library to decrypt BFCodec-encrypted content.",
+  "description": "Tools and a C/C++ library to manipulate BFCodec-encrypted content.",
   "devDependencies": {
     "@prettier/plugin-xml": "^3.4.2",
     "cspell": "^9.7.0",
@@ -48,7 +48,7 @@
   },
   "files": ["LICENSE.txt", "README.md"],
   "homepage": "https://tatsh.github.io/bfcodec/",
-  "keywords": ["ios", "konami", "jubeat", "jukebeat", "reflec beat"],
+  "keywords": ["android", "ios", "konami", "jubeat", "jukebeat", "reflec beat"],
   "license": "MIT",
   "markdownlint-cli2": {
     "config": {
@@ -106,9 +106,9 @@
   },
   "scripts": {
     "build": "cmake --preset=default -DBUILD_DOCS=ON && cmake --build build",
-    "check-formatting": "clang-format -n include/*.h src/*.c* && prettier -c . && markdownlint-cli2",
+    "check-formatting": "clang-format -n include/*.h src/*.c* tools/*.c* tools/*.h && prettier -c . && markdownlint-cli2",
     "check-spelling": "cspell --no-progress .",
-    "format": "clang-format -i include/*.h src/*.c* && yarn prettier -w .",
+    "format": "clang-format -i include/*.h src/*.c* tools/*.c* tools/*.h && yarn prettier -w .",
     "qa": "yarn check-spelling && yarn check-formatting"
   },
   "version": "0.0.0"

@@ -1,6 +1,6 @@
 {
   "dependencies": ["argparse", "libplist", "libzip", "spdlog"],
-  "description": "C/C++ library to decrypt BFCodec-encrypted content.",
+  "description": "Tools and a C/C++ library to manipulate BFCodec-encrypted content.",
   "documentation": "https://bfcodec.readthedocs.org",
   "homepage": "https://tatsh.github.io/bfcodec/",
   "license": "MIT",

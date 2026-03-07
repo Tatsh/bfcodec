@@ -3,7 +3,6 @@
 *.cc
 *.cpp
 *.h
-*.hpp
 *.in
 *.inc
 *.info

@@ -20,7 +20,7 @@
 [![Mastodon Follow](https://img.shields.io/mastodon/follow/109370961877277568?domain=hostux.social&style=social)](https://hostux.social/@Tatsh)
 [![Patreon](https://img.shields.io/badge/Patreon-Tatsh2-F96854?logo=patreon)](https://www.patreon.com/Tatsh2)
 
-Tools and C/C++ library to manipulate BFCodec-encrypted content.
+Tools and a C/C++ library to manipulate BFCodec-encrypted content.
 
 ## How to use
 
