@@ -19,13 +19,9 @@ target_link_libraries(bfcodec_test PRIVATE
 target_include_directories(bfcodec_test PRIVATE
   ${CMAKE_SOURCE_DIR}/include
 )
-set_target_properties(bfcodec_test PROPERTIES
-  CXX_STANDARD 23
-  CXX_EXTENSIONS OFF
-)
 
 if(BFCODEC_APPLY_WARN_ALL)
-	target_compile_options(bfcodec_test PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
+  target_compile_options(bfcodec_test PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
 endif()
 
 include(GoogleTest)
