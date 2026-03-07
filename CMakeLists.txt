@@ -101,9 +101,9 @@ endif()
 find_program(NSIS makensis)
 if(WIN32 AND NSIS)
   set(CPACK_GENERATOR NSIS ZIP)
+  set(DISPLAY_NAME "BFCodec")
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/extra.nsh.in ${CMAKE_BINARY_DIR}/extra.nsh @ONLY)
   string(REPLACE "/" "\\\\" CMAKE_BINARY_DIR_ESCAPED ${CMAKE_BINARY_DIR})
-  set(DISPLAY_NAME "BFCodec")
   set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
       "  !include \\\"${CMAKE_BINARY_DIR_ESCAPED}\\\\extra.nsh\\\"")
   set(CPACK_NSIS_DEFINES "RequestExecutionLevel user
