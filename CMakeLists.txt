@@ -114,16 +114,16 @@ set(CPACK_PACKAGE_FILE_NAME
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR};${CMAKE_MODULE_PATH}")
 set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
 string(REPLACE / \\\\ CMAKE_INSTALL_PREFIX_BS ${CMAKE_INSTALL_PREFIX})
-set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
-    "File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\jbt.exe
-  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\unjbt.exe
-  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\liblzma*.dll
-  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libplist*.dll
-  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libspdlog*.dll
-  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libstdc*.dll
-  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libzip*.dll
-  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libbz2*.dll
-  File /nonfatal ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libgcc*.dll
-  File /nonfatal ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libwinpthread*.dll
-  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\zlib*.dll")
+# set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
+#     "File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\jbt.exe
+#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\unjbt.exe
+#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\liblzma*.dll
+#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libplist*.dll
+#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libspdlog*.dll
+#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libstdc*.dll
+#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libzip*.dll
+#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libbz2*.dll
+#   File /nonfatal ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libgcc*.dll
+#   File /nonfatal ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libwinpthread*.dll
+#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\zlib*.dll")
 include(CPack)
