@@ -12,9 +12,12 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
+#ifndef _WIN32
 #include <fnmatch.h>
+#endif
 
 #include <spdlog/spdlog.h>
 #include <zip.h>
@@ -76,6 +79,36 @@ std::string toLower(std::string s) {
     return s;
 }
 
+#if defined(_WIN32)
+static bool matchGlob(std::string_view path, std::string_view pattern, bool pathname) {
+    if (pattern.empty()) {
+        return path.empty();
+    }
+    if (pattern[0] == '*') {
+        pattern.remove_prefix(1);
+        for (size_t n = 0; n <= path.size(); ++n) {
+            if (pathname && n > 0 && path[n - 1] == '/') {
+                break;
+            }
+            if (matchGlob(path.substr(n), pattern, pathname)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    if (pattern[0] == '?') {
+        if (path.empty() || (pathname && path[0] == '/')) {
+            return false;
+        }
+        return matchGlob(path.substr(1), pattern.substr(1), pathname);
+    }
+    if (path.empty() || path[0] != pattern[0]) {
+        return false;
+    }
+    return matchGlob(path.substr(1), pattern.substr(1), pathname);
+}
+#endif
+
 bool matchPattern(const std::string &path, const std::string &pattern, const Options &opts) {
     std::string p = path;
     std::string pat = pattern;
@@ -83,6 +116,9 @@ bool matchPattern(const std::string &path, const std::string &pattern, const Opt
         p = toLower(p);
         pat = toLower(pat);
     }
+#if defined(_WIN32)
+    return matchGlob(p, pat, opts.wildcardNoSlash);
+#else
     int flags = 0;
     if (opts.caseInsensitive) {
         flags |= FNM_CASEFOLD;
@@ -91,6 +127,7 @@ bool matchPattern(const std::string &path, const std::string &pattern, const Opt
         flags |= FNM_PATHNAME;
     }
     return fnmatch(pat.c_str(), p.c_str(), flags) == 0;
+#endif
 }
 
 bool shouldInclude(const std::string &entryPath, const Options &opts) {
