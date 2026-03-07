@@ -7,7 +7,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install deps
-        run: brew install libzip
+        run: brew install libzip spdlog
       - run: |
           cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=${{matrix.build-type}} \
             --install-prefix ${{github.workspace}}/build/prefix
@@ -60,6 +60,7 @@ jobs:
             nsis:p
             toolchain:p
             libzip:p
+            spdlog:p
           update: true
       - uses: actions/checkout@v6
         with:
@@ -123,7 +124,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libplist-dev libssl-dev libzip-dev zipcmp zipmerge ziptool
+          sudo apt-get install -y libplist-dev libspdlog-dev libssl-dev libzip-dev zipcmp zipmerge ziptool
       - name: Configure
         run: >-
           cmake -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -B ${{github.workspace}}/build

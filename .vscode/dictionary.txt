@@ -44,6 +44,7 @@ libera
 libjsonnet
 libplist
 libsonnet
+libspdlog
 libzip
 linuxdeploy
 mainpage
