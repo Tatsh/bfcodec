@@ -16,34 +16,34 @@ if(NOT TARGET argparse::argparse)
 endif()
 
 
-find_package(plist CONFIG QUIET)
+find_package(PkgConfig REQUIRED)
 set(plist_target "")
-if(TARGET plist::plist)
-    set(plist_target plist::plist)
-    add_compile_definitions(HAVE_LIBPLIST)
+pkg_check_modules(LIBPLIST IMPORTED_TARGET GLOBAL libplist)
+if(TARGET PkgConfig::LIBPLIST)
+    set(plist_target PkgConfig::LIBPLIST)
 endif()
 
 find_package(libzip CONFIG REQUIRED)
-set(libzip_target "")
-if(TARGET libzip::zip)
-    set(libzip_target libzip::zip)
-elseif(TARGET libzip::zip_shared)
-    set(libzip_target libzip::zip_shared)
-elseif(TARGET libzip::zip_static)
-    set(libzip_target libzip::zip_static)
-else()
-    message(FATAL_ERROR "Could not find a libzip target (tried libzip::zip, libzip::zip_shared, libzip::zip_static)")
+find_package(spdlog CONFIG REQUIRED)
+
+if(NOT APPLE AND NOT WIN32)
+    find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+elseif(WIN32)
+    set(win_crypto_lib "advapi32")
 endif()
 
-add_executable(bfcodec bfcodec.cpp)
-target_link_libraries(bfcodec PRIVATE bfcodec_core argparse::argparse)
-set_target_properties(bfcodec PROPERTIES
-    CXX_STANDARD 23
-    CXX_EXTENSIONS OFF
-)
-
-add_executable(unjbt unjbt.cpp)
-target_link_libraries(unjbt PRIVATE bfcodec_core argparse::argparse ${libzip_target} ${plist_target})
+add_executable(unjbt unjbt.cpp jbtcommon.cpp)
+target_link_libraries(unjbt PRIVATE bfcodec_core argparse::argparse libzip::zip spdlog::spdlog ${plist_target})
+if(plist_target)
+    target_compile_definitions(unjbt PRIVATE HAVE_LIBPLIST)
+endif()
+if(NOT APPLE AND NOT WIN32)
+    target_include_directories(unjbt PRIVATE ${OPENSSL_INCLUDE_DIR})
+    target_link_libraries(unjbt PRIVATE ${OPENSSL_CRYPTO_LIBRARY})
+elseif(WIN32)
+    target_link_libraries(unjbt PRIVATE ${win_crypto_lib})
+endif()
+target_compile_definitions(unjbt PRIVATE BFCODEC_VERSION="${CMAKE_PROJECT_VERSION}")
 set_target_properties(unjbt PROPERTIES
     CXX_STANDARD 23
     CXX_EXTENSIONS OFF
@@ -58,20 +58,26 @@ if(APPLE)
     endif()
 endif()
 
-add_executable(jbt jbt.cpp)
-target_link_libraries(jbt PRIVATE bfcodec_core argparse::argparse ${libzip_target})
+add_executable(jbt jbt.cpp jbtcommon.cpp)
+target_link_libraries(jbt PRIVATE bfcodec_core argparse::argparse libzip::zip spdlog::spdlog)
+if(NOT APPLE AND NOT WIN32)
+    target_include_directories(jbt PRIVATE ${OPENSSL_INCLUDE_DIR})
+    target_link_libraries(jbt PRIVATE ${OPENSSL_CRYPTO_LIBRARY})
+elseif(WIN32)
+    target_link_libraries(jbt PRIVATE ${win_crypto_lib})
+endif()
+target_compile_definitions(jbt PRIVATE BFCODEC_VERSION="${CMAKE_PROJECT_VERSION}")
 set_target_properties(jbt PROPERTIES
     CXX_STANDARD 23
     CXX_EXTENSIONS OFF
 )
 
 if(BFCODEC_APPLY_WARN_ALL)
-	target_compile_options(bfcodec PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
 	target_compile_options(unjbt PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
 	target_compile_options(jbt PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
 endif()
 
-install(TARGETS bfcodec unjbt jbt
+install(TARGETS unjbt jbt
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 install(FILES ${CMAKE_SOURCE_DIR}/README.md ${CMAKE_SOURCE_DIR}/LICENSE.txt TYPE DOC)
@@ -80,7 +86,7 @@ if(WIN32)
     set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
     set(CPACK_NSIS_DISPLAY_NAME "bfcodec")
     set(CPACK_NSIS_PACKAGE_NAME "bfcodec")
-    set(CPACK_PACKAGE_EXECUTABLES "bfcodec;bfcodec" "jbt;jbt" "unjbt;unjbt")
+    set(CPACK_PACKAGE_EXECUTABLES "jbt;jbt" "unjbt;unjbt")
     set(CPACK_GENERATOR NSIS ZIP)
 else()
     set(CPACK_GENERATOR ZIP)

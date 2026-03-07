@@ -4,74 +4,164 @@
 .Os
 .Sh NAME
 .Nm unjbt
-.Nd extract and decrypt a .jbt/.rb/.orb archive
+.Nd list, test, or extract.jbt/.orb/.rbb archives
 .Sh SYNOPSIS
+.Nm
+.Op Fl V
+.Nm
+.Op Fl l | Fl Z
+.Op Fl C | Fl LL | Fl W
+.Op Fl q | Fl qq | Fl v
+.Op Fl x Ar pattern ...
+.Op Fl i Ar pattern ...
+.Ar archive
 .Nm
 .Op Fl K Ar key | Fl -key Ar key | Fl -key-file Ar path
 .Op Fl -iv Ar iv | Fl -iv-file Ar path
+.Op Fl t | Fl f | Fl u | Fl n | Fl j
+.Op Fl C | Fl LL | Fl W
+.Op Fl q | Fl qq | Fl v
+.Op Fl d Ar exdir | Fl -exdir Ar exdir
+.Op Fl x Ar pattern ...
+.Op Fl i Ar pattern ...
 .Ar archive
-.Ar outdir
+.Op Ar file ...
 .Sh DESCRIPTION
 .Nm
-opens the ZIP-based archive
-.Ar archive
-.Pq .jbt , .rb , or .orb ,
-extracts all entries into
-.Ar outdir
-(creating directories as needed),
-then decrypts each extracted file in place using BFCodec (Blowfish-derived, CBC).
-Entries that do not contain the expected 8-byte trailer or valid encrypted
-blocks are skipped.
+operates on ZIP-based archives
+.Pq .jbt , .rb , or .orb
+whose entries may be encrypted with BFCodec (Blowfish-derived, CBC).
+By default it extracts all entries into the current directory
+.Pq or Fl d Ar exdir
+and decrypts each extracted file in place.
 .Pp
-Key and IV are required.
-They can be given as hex strings
-.Pq Fl K Ns / Ns Fl -key ,
+Listing
+.Pq Fl l , Fl Z
+and version
+.Pq Fl V
+do not require a key or IV.
+Extraction, test
+.Pq Fl t ,
+and stdout modes
+.Pq Fl c , Fl p
+require key and IV unless only listing.
+Key and IV can be given as hex strings
+.Pq Fl K Ns / Ns Fl -key , Fl -iv ;
+spaces in hex are ignored.
+Alternatively use binary files:
+.Fl -key-file
+.Pq exactly 16 bytes ,
+.Fl -iv-file
+.Pq exactly 8 bytes .
+The IV in hex is 16 hex digits (8 bytes).
+If
 .Fl -iv
-(spaces ignored) or as raw binary files
-.Pq Fl -key-file ,
-.Fl -iv-file .
-A key file must be exactly 16 bytes; an IV file must be exactly 8 bytes.
-The IV as hex must be 16 hex digits (8 bytes).
+and
+.Fl -iv-file
+are omitted, a default IV is used.
 .Pp
-If libplist is available, binary plist files are converted to XML after
-decryption.
-PNG images that contain the CgBI chunk (e.g. from iOS) are optionally
-repaired using
+Include/exclude and optional
+.Ar file
+arguments filter which members are listed or extracted.
+Patterns are shell-style globs;
+.Fn fnmatch
+rules apply.
+Excludes are applied first; if any include patterns are given, an entry must match at least one include and no exclude.
+.Pp
+If libplist is available, binary plist files are converted to XML after decryption.
+PNG images containing the CgBI chunk (e.g. from iOS) can be repaired using
 .Xr pngdefry 1
-or, on macOS, with
+or, on macOS,
 .Nm xcrun
 .Nm pngcrush
 when available.
 .Sh OPTIONS
-.Bl -tag -width Ds
+.Bl -tag -width "-x pattern"
+.It Fl V
+Print version and exit.
+.It Fl l
+List archive contents in short format (length, date, time, name).
+Does not require key/IV.
+.It Fl Z
+List archive contents in zipinfo-style format (permissions, size, date, name).
+Does not require key/IV.
+.It Fl t
+Test archive: extract to a temporary directory, decrypt, then remove.
+Reports whether the archive is intact.
+.It Fl c
+Extract to stdout with member names.
+Not yet implemented.
+.It Fl p
+Extract to stdout (data only).
+Not yet implemented.
+.It Fl f
+Freshen: extract only files that are newer than existing files on disk.
+.It Fl u
+Update: like freshen, and also extract files that do not exist on disk.
+.It Fl n
+Never overwrite existing files.
+.It Fl j
+Junk paths: do not recreate directory structure; extract all files into the extraction directory.
+.It Fl q
+Quiet: reduce messages.
+.It Fl qq
+Very quiet: minimal output.
+.It Fl v
+Verbose.
+.It Fl C
+Case-insensitive matching for include/exclude patterns and optional file list.
+.It Fl LL
+Convert extracted member names to lowercase.
+.It Fl W
+With pattern matching, treat
+.Sq *
+and
+.Sq ?
+as not matching
+.Sq / .
+.It Fl d Ar exdir , Fl -exdir Ar exdir
+Extraction directory.
+Default is the current directory
+.Pq \&. .
+.It Fl x Ar pattern , Fl -exclude Ar pattern
+Exclude members matching
+.Ar pattern .
+May be repeated.
+Excludes are applied before includes.
+.It Fl i Ar pattern , Fl -include Ar pattern
+Include only members matching
+.Ar pattern .
+May be repeated.
+If no include patterns are given, all non-excluded members are included.
+.El
+.Sh Key and IV options
+.Bl -tag -width "-key-file path"
 .It Fl K , Fl -key Ar key
-Use
-.Ar key
-as the cipher key (hex string; spaces ignored).
+Passphrase as hex; MD5-hashed to 16 bytes for the key.
 Mutually exclusive with
 .Fl -key-file .
 .It Fl -key-file Ar path
-Read the key from the binary file
-.Ar path
-(exactly 16 bytes).
+Read the 16-byte key from the binary file
+.Ar path .
 Mutually exclusive with
 .Fl -key .
 .It Fl -iv Ar iv
-Use
-.Ar iv
-as the initialization vector (16 hex digits = 8 bytes; spaces ignored).
+IV as 16 hex digits (8 bytes); spaces ignored.
 Mutually exclusive with
 .Fl -iv-file .
+Default used if neither
+.Fl -iv
+nor
+.Fl -iv-file
+is given.
 .It Fl -iv-file Ar path
-Read the IV from the binary file
-.Ar path
-(exactly 8 bytes).
+Read the 8-byte IV from the binary file
+.Ar path .
 Mutually exclusive with
 .Fl -iv .
 .El
 .Sh EXIT STATUS
 .Ex -std
 .Sh SEE ALSO
-.Xr bfcodec 1 ,
 .Xr jbt 1 ,
 .Xr pngdefry 1

@@ -2,94 +2,62 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
-#include <iostream>
+#include <sstream>
 #include <string>
 
+#include <spdlog/spdlog.h>
 #include <zip.h>
 
-#include "jbt_common.hpp"
+#include "jbtcommon.h"
 
 namespace fs = std::filesystem;
 
-namespace {
-
-std::string zipErrorToString(int err) {
-    zip_error_t ze;
-    zip_error_init_with_code(&ze, err);
-    std::string s = zip_error_strerror(&ze);
-    zip_error_fini(&ze);
-    return s;
-}
-
-bool addFileToZip(zip_t *za,
-                  const std::string &name,
-                  std::vector<uint8_t> &&data,
-                  std::string &error) {
-    if (!za) {
-        error = "zip handle is null";
-        return false;
-    }
-
-    void *buf = std::malloc(data.size());
-    if (!buf && !data.empty()) {
-        error = "out of memory";
-        return false;
-    }
-    if (!data.empty()) {
-        std::copy_n(data.data(), data.size(), static_cast<uint8_t *>(buf));
-    }
-
-    zip_source_t *src = zip_source_buffer(za, buf, data.size(), 1);
-    if (!src) {
-        std::free(buf);
-        error = "zip: cannot create source for " + name;
-        return false;
-    }
-
-    zip_int64_t idx = zip_file_add(za, name.c_str(), src, ZIP_FL_OVERWRITE | ZIP_FL_ENC_UTF_8);
-    if (idx < 0) {
-        zip_source_free(src);
-        error = "zip: cannot add file " + name;
-        return false;
-    }
-
-    return true;
-}
-
-} // namespace
-
 int main(int argc, char *argv[]) {
     argparse::ArgumentParser program("jbt");
-    program.add_description("Create a .jbt/.rb/.orb archive (zip) by encrypting all files in a "
+    program.add_description("Create a .jbt/.orb/.rb archive (zip) by encrypting all files in a "
                             "directory using BFCodec.");
 
-    program.add_argument("-K", "--key")
-        .help("key as hex string (spaces ignored); alternative to --key-file");
-    program.add_argument("--key-file").help("path to binary key file (exactly 16 bytes)");
-    program.add_argument("--iv").help(
-        "IV as hex string (spaces ignored); alternative to --iv-file");
-    program.add_argument("--iv-file").help("path to binary IV file (exactly 8 bytes)");
+    program.add_argument("-K", "--key").help("Passphrase; alternative to --key-file.");
+    program.add_argument("--key-file")
+        .help("Path to binary key file (first 16 bytes will be used).");
+    program.add_argument("--iv").help("IV as hex string (spaces ignored).");
+    program.add_argument("--iv-file").help("Path to binary IV file (exactly 8 bytes).");
 
-    program.add_argument("indir").help("input directory");
-    program.add_argument("archive").help("output archive file (.jbt/.rb/.orb)");
+    program.add_argument("-V")
+        .help("Print version and exit.")
+        .default_value(false)
+        .implicit_value(true);
+    program.add_argument("indir").help("Input directory.");
+    program.add_argument("archive").help("Output archive file (.jbt/.orb/.rb).");
+
+    spdlog::set_pattern("%v");
+
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "-V") == 0) {
+            spdlog::info("jbt v" BFCODEC_VERSION);
+            return EXIT_SUCCESS;
+        }
+    }
 
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception &err) {
-        std::cerr << "jbt: " << err.what() << "\n";
-        std::cerr << program;
+        spdlog::error("{}", err.what());
+        std::ostringstream oss;
+        oss << program;
+        spdlog::error("{}", oss.str());
         return EXIT_FAILURE;
     }
 
-    auto keyIv = tools::getKeyIv(program);
+    auto keyIv = Tools::getKeyIv(program);
     if (!keyIv) {
-        std::cerr << "jbt: " << keyIv.error() << "\n";
+        spdlog::error("{}", Tools::message(keyIv.error()));
         return EXIT_FAILURE;
     }
 
-    auto codec = tools::createCodec(keyIv->keyBytes);
+    auto codec = Tools::createCodec(keyIv->keyBytes);
     if (!codec) {
-        std::cerr << "jbt: " << codec.error() << "\n";
+        spdlog::error("{}", message(codec.error()));
         return EXIT_FAILURE;
     }
 
@@ -97,14 +65,17 @@ int main(int argc, char *argv[]) {
     fs::path archivePath(program.get<std::string>("archive"));
 
     if (!fs::is_directory(inDir)) {
-        std::cerr << "jbt: not a directory: " << inDir.string() << "\n";
+        spdlog::error("Not a directory: {}.", inDir.string());
         return EXIT_FAILURE;
     }
 
-    int err = 0;
-    zip_t *za = zip_open(archivePath.c_str(), ZIP_CREATE | ZIP_TRUNCATE, &err);
-    if (!za) {
-        std::cerr << "jbt: zip open failed: " << zipErrorToString(err) << "\n";
+    int zipErr = 0;
+    zip_t *zip = zip_open(archivePath.string().c_str(), ZIP_CREATE | ZIP_TRUNCATE, &zipErr);
+    if (!zip) {
+        zip_error_t err;
+        zip_error_init_with_code(&err, zipErr);
+        spdlog::error("{}", zip_error_strerror(&err));
+        zip_error_fini(&err);
         return EXIT_FAILURE;
     }
 
@@ -121,10 +92,10 @@ int main(int argc, char *argv[]) {
         fs::path rel = fs::relative(filePath, inDir);
         std::string zipName = rel.generic_string();
 
-        auto plain = tools::readWholeFile(filePath);
+        auto plain = Tools::readWholeFile(filePath);
         if (!plain) {
-            std::cerr << "jbt: " << plain.error() << "\n";
-            zip_close(za);
+            spdlog::error("{}", Tools::message(plain.error()));
+            zip_close(zip);
             return EXIT_FAILURE;
         }
 
@@ -135,16 +106,16 @@ int main(int argc, char *argv[]) {
         const uint32_t blockSize = static_cast<uint32_t>(buf.size());
 
         if (blockSize == 0 || (buf.size() % 8u) != 0u) {
-            std::cerr << "jbt: invalid block size for " << filePath.string() << "\n";
-            zip_close(za);
+            spdlog::error("Invalid block size for {}.", filePath.string());
+            zip_close(zip);
             return EXIT_FAILURE;
         }
 
         std::span<std::byte> span = std::as_writable_bytes(std::span(buf));
         auto result = codec->encrypt(span, keyIv->ivBytes);
         if (!result) {
-            std::cerr << "jbt: encrypt failed for " << filePath.string() << "\n";
-            zip_close(za);
+            spdlog::error("{} for {}.", message(result.error()), filePath.string());
+            zip_close(zip);
             return EXIT_FAILURE;
         }
 
@@ -160,22 +131,44 @@ int main(int argc, char *argv[]) {
         out.push_back(static_cast<uint8_t>((blockSize >> 8) & 0xFF));
         out.push_back(static_cast<uint8_t>(blockSize & 0xFF));
 
-        std::string addError;
-        if (!addFileToZip(za, zipName, std::move(out), addError)) {
-            std::cerr << "jbt: " << addError << "\n";
-            zip_close(za);
+        zip_uint8_t *copy = static_cast<zip_uint8_t *>(malloc(out.size()));
+        if (!copy) {
+            spdlog::error("Out of memory.");
+            zip_close(zip);
+            return EXIT_FAILURE;
+        }
+        std::memcpy(copy, out.data(), out.size());
+
+        zip_source_t *src = zip_source_buffer(zip, copy, out.size(), 1);
+        if (!src) {
+            spdlog::error("{}", zip_strerror(zip));
+            free(copy);
+            zip_close(zip);
+            return EXIT_FAILURE;
+        }
+
+        zip_int64_t index = zip_file_add(zip, zipName.c_str(), src, ZIP_FL_OVERWRITE);
+        if (index < 0) {
+            spdlog::error("{}", zip_strerror(zip));
+            zip_source_free(src);
+            zip_close(zip);
+            return EXIT_FAILURE;
+        }
+
+        if (zip_set_file_compression(zip, static_cast<zip_uint64_t>(index), ZIP_CM_STORE, 0) < 0) {
+            spdlog::error("{}", zip_strerror(zip));
+            zip_close(zip);
             return EXIT_FAILURE;
         }
 
         ++encryptedCount;
     }
 
-    if (zip_close(za) != 0) {
-        std::cerr << "jbt: zip close failed\n";
+    if (zip_close(zip) < 0) {
+        spdlog::error("Close failed.");
         return EXIT_FAILURE;
     }
 
-    std::cerr << "jbt: wrote " << archivePath.string() << ", encrypted " << encryptedCount
-              << " file(s)\n";
+    spdlog::info("Wrote {}, encrypted {} file(s).", archivePath.string(), encryptedCount);
     return EXIT_SUCCESS;
 }
