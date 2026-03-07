@@ -1,4 +1,3 @@
-
 advapi
 appdir
 appimage
@@ -26,12 +25,18 @@ drwxr
 dwords
 esbenp
 exdir
+fileflags
+fileflagsmask
+fileos
+filesubtype
+fileversion
 foxundermoon
 fsafe
 gmock
 graphviz
 hcrypthash
 hcryptprov
+ifndef
 includedir
 instdir
 interprocedural
@@ -61,6 +66,7 @@ makensis
 mandir
 mdfile
 msystem
+ndebug
 nonfatal
 nsis
 nullptr
@@ -68,6 +74,7 @@ pacboy
 pngcrush
 pngdefry
 pngfix
+productversion
 prov
 reflec
 reflow
@@ -84,6 +91,7 @@ ucrt
 udvare
 unjbt
 vedantmgoyal
+versioninfo
 weverything
 winget
 winpthread
