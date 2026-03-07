@@ -43,6 +43,8 @@ tools are in `PATH`:
 | CgBI PNG                     | PNG               | `pngcrush`, `pngdefry`                                                  |
 | Binary Property List (plist) | XML Property List | `libplist` (non-macOS, enabled at build time), `CoreFoundation` (macOS) |
 
+pngdefry can be downloaded from [its official site (archived)](https://web.archive.org/web/20211120053356/http://www.jongware.com/pngdefry.html).
+
 ```shell
 unjbt -d game-data game-data.jbt
 ```
@@ -82,3 +84,22 @@ void func() {
 ```
 
 Link with `-lbfcodec`.
+
+## Building from source
+
+Requirements:
+
+- CMake
+- On Linux (for tools): OpenSSL
+- Optional: libplist on non-macOS
+
+Basic commands to build after cloning:
+
+```shell
+mkdir build
+cd build
+cmake ..
+make
+```
+
+`jbt` and `unjbt` will be in the `tools` directory.
