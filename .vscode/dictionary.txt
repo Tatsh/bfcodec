@@ -8,9 +8,11 @@ bemani
 bfcodec
 bfcodecpp
 bindir
+bitness
 bsky
 buildsystems
 cgbi
+choco
 commitizen
 corefoundation
 coveragerc
@@ -22,6 +24,7 @@ dcmake
 dcoverage
 docstrings
 drwxr
+dwindows
 dwords
 esbenp
 exdir
@@ -67,6 +70,7 @@ mainpage
 makensis
 mandir
 mdfile
+msvc
 msystem
 ndebug
 nonfatal

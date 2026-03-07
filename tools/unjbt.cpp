@@ -299,10 +299,17 @@ std::expected<void, ExtractError> extractZip(const fs::path &archivePath,
                     entryTime = std::time(nullptr);
                 }
                 auto entrySys = std::chrono::system_clock::from_time_t(entryTime);
-                auto entryFile = std::chrono::file_clock::from_sys(entrySys);
-                if (diskTime >= entryFile && (opts.freshen || opts.update)) {
+#if defined(_MSC_VER)
+                auto diskSys = std::chrono::clock_cast<std::chrono::system_clock>(diskTime);
+                if (diskSys >= entrySys) {
                     continue;
                 }
+#else
+                auto entryFile = std::chrono::file_clock::from_sys(entrySys);
+                if (diskTime >= entryFile) {
+                    continue;
+                }
+#endif
             }
         }
 

@@ -19,17 +19,35 @@ static const unsigned char BF_INIT_BYTES[] = {
 
 static_assert(sizeof(BF_INIT_BYTES) == BF_INIT_BYTES_LEN, "BF_INIT_BYTES size");
 
+#if defined(_MSC_VER)
+#include <intrin.h>
+#define BSWAP32(x) _byteswap_ulong(x)
+#else
+#define BSWAP32(x) __builtin_bswap32(x)
+#endif // _MSC_VER
+
+#if (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__) || defined(_WIN32) ||   \
+    defined(_MSC_VER)
+#define BFCODEC_LE 1
+#endif // _BYTE_ORDER
+
 /* Read big-endian u32 from the 4 bytes at p. */
-static inline uint32_t read_u32_be(const uint8_t p[static 4]) {
-    return (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16 | (uint32_t)p[2] << 8 | p[3];
+static inline uint32_t read_u32_be(const uint8_t p[4]) {
+    uint32_t u;
+    memcpy(&u, p, 4);
+#if defined(BFCODEC_LE) && BFCODEC_LE
+    return BSWAP32(u);
+#else
+    return u;
+#endif
 }
 
 /* Write big-endian u32 into b[0..3]. */
-static void write_u32_be(uint8_t b[static 4], uint32_t x) {
-    b[0] = (uint8_t)(x >> 24);
-    b[1] = (uint8_t)(x >> 16);
-    b[2] = (uint8_t)(x >> 8);
-    b[3] = (uint8_t)x;
+static inline void write_u32_be(uint8_t b[4], uint32_t x) {
+#if defined(BFCODEC_LE) && BFCODEC_LE
+    x = BSWAP32(x);
+#endif
+    memcpy(b, &x, 4);
 }
 
 static uint32_t bf_f(C_BLOWFISH *blf, uint32_t x) {
