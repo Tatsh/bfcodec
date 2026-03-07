@@ -1,5 +1,10 @@
-cmake_minimum_required(VERSION 3.16)
-project(bfcodec VERSION 0.0.1 LANGUAGES C CXX)
+cmake_minimum_required(VERSION 3.31)
+project(
+  bfcodec
+  VERSION 0.0.1
+  LANGUAGES C CXX
+  DESCRIPTION "Tools and a C/C++ library to manipulate BFCodec-encrypted content"
+  HOMEPAGE_URL "https://github.com/Tatsh/bfcodec")
 
 include(CheckTypeSize)
 include(GNUInstallDirs)
