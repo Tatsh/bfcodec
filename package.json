@@ -112,5 +112,5 @@
     "format": "clang-format -i include/*.h src/*.c* tools/*.c* tools/*.h && yarn prettier -w .",
     "qa": "yarn check-spelling && yarn check-formatting"
   },
-  "version": "0.0.1"
+  "version": "0.0.2"
 }
