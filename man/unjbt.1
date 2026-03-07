@@ -21,7 +21,7 @@
 .Op Fl t | Fl f | Fl u | Fl n | Fl j
 .Op Fl C | Fl LL | Fl W
 .Op Fl q | Fl qq | Fl v
-.Op Fl d Ar exdir | Fl -exdir Ar exdir
+.Op Fl d Ar dir | Fl -extract-to Ar dir
 .Op Fl x Ar pattern ...
 .Op Fl i Ar pattern ...
 .Ar archive
@@ -32,7 +32,7 @@ operates on ZIP-based archives
 .Pq .jbt , .rb , or .orb
 whose entries may be encrypted with BFCodec (Blowfish-derived, CBC).
 By default it extracts all entries into the current directory
-.Pq or Fl d Ar exdir
+.Pq or Fl d Ns / Ns Fl -extract-to Ar dir
 and decrypts each extracted file in place.
 .Pp
 Listing
@@ -50,9 +50,9 @@ Key and IV can be given as hex strings
 spaces in hex are ignored.
 Alternatively use binary files:
 .Fl -key-file
-.Pq exactly 16 bytes ,
+.Pq first 16 bytes used; file may be longer ,
 .Fl -iv-file
-.Pq exactly 8 bytes .
+.Pq first 8 bytes used; file may be longer .
 The IV in hex is 16 hex digits (8 bytes).
 If
 .Fl -iv
@@ -119,7 +119,7 @@ and
 .Sq ?
 as not matching
 .Sq / .
-.It Fl d Ar exdir , Fl -exdir Ar exdir
+.It Fl d Ar dir , Fl -extract-to Ar dir
 Extraction directory.
 Default is the current directory
 .Pq \&. .
@@ -141,8 +141,9 @@ Passphrase as hex; MD5-hashed to 16 bytes for the key.
 Mutually exclusive with
 .Fl -key-file .
 .It Fl -key-file Ar path
-Read the 16-byte key from the binary file
-.Ar path .
+Read the key from the binary file
+.Ar path
+(first 16 bytes used; file may be longer).
 Mutually exclusive with
 .Fl -key .
 .It Fl -iv Ar iv
@@ -155,8 +156,9 @@ nor
 .Fl -iv-file
 is given.
 .It Fl -iv-file Ar path
-Read the 8-byte IV from the binary file
-.Ar path .
+Read the IV from the binary file
+.Ar path
+(first 8 bytes used; file may be longer).
 Mutually exclusive with
 .Fl -iv .
 .El

@@ -407,10 +407,11 @@ int main(int argc, char *argv[]) {
                             "for extract, test, -c, -p.");
 
     program.add_argument("-K", "--key")
-        .help("Passphrase (MD5-hashed to 16 bytes); alternative to --key-file.");
-    program.add_argument("--key-file").help("Path to 16-byte key file.");
+        .help("Passphrase (MD5-hashed to 16 bytes); default: \"Konami Bemani Mobile iPad\".");
+    program.add_argument("--key-file")
+        .help("Path to key file (first 16 bytes used; overrides default passphrase).");
     program.add_argument("--iv").help("IV as hex (default from assembly).");
-    program.add_argument("--iv-file").help("Path to 8-byte IV file.");
+    program.add_argument("--iv-file").help("Path to IV file (first 8 bytes used).");
 
     program.add_argument("-l")
         .help("List (short format).")
@@ -459,7 +460,7 @@ int main(int argc, char *argv[]) {
         .default_value(false)
         .implicit_value(true);
 
-    program.add_argument("-d", "--exdir")
+    program.add_argument("-d", "--extract-to")
         .help("Extraction directory (default: .).")
         .default_value(std::string("."));
     program.add_argument("-x", "--exclude")
@@ -503,7 +504,7 @@ int main(int argc, char *argv[]) {
     opts.caseInsensitive = program.get<bool>("-C");
     opts.toLowercase = program.get<bool>("-LL");
     opts.wildcardNoSlash = program.get<bool>("-W");
-    opts.exdir = fs::path(program.get<std::string>("-d"));
+    opts.exdir = fs::path(program.get<std::string>("--extract-to"));
 
     if (program.is_used("-x")) {
         for (const auto &group : program.get<std::vector<std::vector<std::string>>>("-x")) {

@@ -101,6 +101,9 @@ std::expected<std::vector<std::byte>, ParseError> parseHex(std::string_view hex)
 std::expected<std::vector<std::byte>, FileError> readFileExactly(const fs::path &path,
                                                                  size_t expectedSize);
 
+/** Read the first \a size bytes from \a path. File may be longer; only the first bytes are used. */
+std::expected<std::vector<std::byte>, FileError> readFileFirst(const fs::path &path, size_t size);
+
 std::expected<std::array<std::byte, 16>, KeyIvError> md5Key(std::span<const std::byte> data);
 
 std::expected<KeyIv, KeyIvError> getKeyIv(argparse::ArgumentParser &program);

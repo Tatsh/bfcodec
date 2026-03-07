@@ -17,11 +17,11 @@ int main(int argc, char *argv[]) {
     program.add_description("Create a .jbt/.orb/.rb archive (zip) by encrypting all files in a "
                             "directory using BFCodec.");
 
-    program.add_argument("-K", "--key").help("Passphrase; alternative to --key-file.");
+    program.add_argument("-K", "--key").help("Passphrase; default: \"Konami Bemani Mobile iPad\".");
     program.add_argument("--key-file")
-        .help("Path to binary key file (first 16 bytes will be used).");
+        .help("Path to key file (first 16 bytes used; overrides default passphrase).");
     program.add_argument("--iv").help("IV as hex string (spaces ignored).");
-    program.add_argument("--iv-file").help("Path to binary IV file (exactly 8 bytes).");
+    program.add_argument("--iv-file").help("Path to IV file (first 8 bytes used).");
 
     program.add_argument("-V")
         .help("Print version and exit.")

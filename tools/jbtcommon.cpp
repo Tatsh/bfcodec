@@ -116,6 +116,19 @@ std::expected<std::vector<std::byte>, FileError> readFileExactly(const fs::path 
     return buf;
 }
 
+std::expected<std::vector<std::byte>, FileError> readFileFirst(const fs::path &path, size_t size) {
+    std::ifstream f(path, std::ios::binary);
+    if (!f) {
+        return std::unexpected(FileError::CannotOpen);
+    }
+    std::vector<std::byte> buf(size);
+    f.read(reinterpret_cast<char *>(buf.data()), static_cast<std::streamsize>(size));
+    if (static_cast<size_t>(f.gcount()) < size) {
+        return std::unexpected(FileError::WrongSize);
+    }
+    return buf;
+}
+
 std::expected<std::array<std::byte, 16>, KeyIvError> md5Key(std::span<const std::byte> data) {
     std::array<std::byte, 16> out{};
 #if defined(__APPLE__)
@@ -166,6 +179,17 @@ std::expected<std::array<std::byte, 16>, KeyIvError> md5Key(std::span<const std:
 #endif
 }
 
+namespace {
+// Keys:
+// - jubeat plus : 'Konami Bemani Mobile iPad' - jubeat
+// - Unknown - 'jubeatskmpledata'
+// - maybe Jukebeat - 'Konami Bemani Mobile iOS'
+// - REFLEC BEAT plus - 'Konami ReflecBeat For iOS.'
+// - Unknown - REFLEC BEAT US version
+// - Unknown - Pop'n Rhythmin
+const std::string kDefaultPassphrase("Konami Bemani Mobile iPad");
+} // namespace
+
 std::expected<KeyIv, KeyIvError> getKeyIv(argparse::ArgumentParser &program) {
     auto keyOpt = program.present<std::string>("--key");
     auto keyFileOpt = program.present<std::string>("--key-file");
@@ -175,28 +199,31 @@ std::expected<KeyIv, KeyIvError> getKeyIv(argparse::ArgumentParser &program) {
     if (keyOpt && keyFileOpt) {
         return std::unexpected(KeyIvError::KeyAndKeyFileBoth);
     }
-    if (!keyOpt && !keyFileOpt) {
-        return std::unexpected(KeyIvError::KeyRequired);
-    }
     if (ivOpt && ivFileOpt) {
         return std::unexpected(KeyIvError::IvAndIvFileBoth);
     }
 
     KeyIv out;
-
+    std::optional<std::string> passphraseOpt;
     if (keyOpt) {
-        if (keyOpt->empty()) {
+        passphraseOpt = *keyOpt;
+    } else if (!keyFileOpt) {
+        passphraseOpt = kDefaultPassphrase;
+    }
+
+    if (passphraseOpt) {
+        if (passphraseOpt->empty()) {
             return std::unexpected(KeyIvError::KeyEmpty);
         }
-        std::span<const std::byte> passphrase(reinterpret_cast<const std::byte *>(keyOpt->data()),
-                                              keyOpt->size());
+        std::span<const std::byte> passphrase(
+            reinterpret_cast<const std::byte *>(passphraseOpt->data()), passphraseOpt->size());
         auto digest = md5Key(passphrase);
         if (!digest) {
             return std::unexpected(digest.error());
         }
         out.keyBytes.assign(digest->begin(), digest->end());
     } else {
-        auto read = readFileExactly(*keyFileOpt, 16);
+        auto read = readFileFirst(*keyFileOpt, 16);
         if (!read) {
             return std::unexpected(KeyIvError::KeyReadFailed);
         }
@@ -213,7 +240,7 @@ std::expected<KeyIv, KeyIvError> getKeyIv(argparse::ArgumentParser &program) {
         }
         std::copy_n(parsed->begin(), 8, out.ivBytes.begin());
     } else if (ivFileOpt) {
-        auto read = readFileExactly(*ivFileOpt, 8);
+        auto read = readFileFirst(*ivFileOpt, 8);
         if (!read) {
             return std::unexpected(KeyIvError::IvReadFailed);
         }
