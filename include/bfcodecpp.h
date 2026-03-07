@@ -31,7 +31,11 @@ public:
      */
     static std::expected<BFCodec, BFCodecError> create();
 
-    /** Human-readable message for BFCodecError. */
+    /**
+     * @brief Human-readable message for BFCodecError.
+     * @param e The error code.
+     * @return A string message describing the error.
+     */
     static std::string message(BFCodecError e);
 
     BFCodec(const BFCodec &) = delete;

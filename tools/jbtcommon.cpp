@@ -450,17 +450,18 @@ int runProcess(const std::vector<std::string> &argv) {
 }
 
 bool tryPngdefryInPlace(const fs::path &pngPath) {
+    int rc = 0;
 #ifdef __APPLE__
     // Prefer CoreGraphics-compatible fix via pngcrush on macOS when available.
     fs::path tmp = pngPath;
     tmp += ".pngfix";
-    int rc = runProcess({"xcrun",
-                         "-sdk",
-                         "iphoneos",
-                         "pngcrush",
-                         "-revert-iphone-optimizations",
-                         pngPath.string(),
-                         tmp.string()});
+    rc = runProcess({"xcrun",
+                     "-sdk",
+                     "iphoneos",
+                     "pngcrush",
+                     "-revert-iphone-optimizations",
+                     pngPath.string(),
+                     tmp.string()});
     if (rc == 0) {
         std::error_code ec;
         fs::rename(tmp, pngPath, ec);
@@ -486,7 +487,7 @@ bool tryPngdefryInPlace(const fs::path &pngPath) {
     fs::path tmpDir = buf.data();
     spdlog::debug("Created temporary directory: {}.", tmpDir.string());
 
-    int rc = runProcess({"pngdefry", "-o", tmpDir.string(), pngPath.string()});
+    rc = runProcess({"pngdefry", "-o", tmpDir.string(), pngPath.string()});
     if (rc != 0) {
         fs::remove_all(tmpDir, ec);
         return false;
@@ -528,7 +529,7 @@ bool tryPngdefryInPlace(const fs::path &pngPath) {
     }
     fs::path tmpDir(uniquePathBuf);
 
-    int rc = runProcess({"pngdefry", "-o", tmpDir.string(), pngPath.string()});
+    rc = runProcess({"pngdefry", "-o", tmpDir.string(), pngPath.string()});
     if (rc != 0) {
         std::error_code ec;
         fs::remove_all(tmpDir, ec);
