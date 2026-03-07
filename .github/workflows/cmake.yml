@@ -59,6 +59,7 @@ jobs:
             ninja:p
             nsis:p
             toolchain:p
+            libplist:p
             libzip:p
             spdlog:p
           update: true

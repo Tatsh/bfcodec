@@ -92,3 +92,38 @@ endif()
 if(EXTRA_DOCS)
   install(DIRECTORY ${CMAKE_BINARY_DIR}/html DESTINATION ${CMAKE_INSTALL_DATADIR}/bfcodec)
 endif()
+
+find_program(NSIS makensis)
+if(WIN32 AND NSIS)
+  set(CPACK_GENERATOR NSIS ZIP)
+else()
+  set(CPACK_GENERATOR ZIP)
+endif()
+set(CPACK_PACKAGE_VENDOR Tatsh)
+set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_SOURCE_DIR}/LICENSE.txt)
+set(__cpack_system_name ${CMAKE_SYSTEM_NAME})
+if(__cpack_system_name MATCHES "Windows")
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(__cpack_system_name win64)
+  else()
+    set(__cpack_system_name win32)
+  endif()
+endif()
+set(CPACK_PACKAGE_FILE_NAME
+    ${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${__cpack_system_name}-${CMAKE_BUILD_TYPE})
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR};${CMAKE_MODULE_PATH}")
+set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
+string(REPLACE / \\\\ CMAKE_INSTALL_PREFIX_BS ${CMAKE_INSTALL_PREFIX})
+set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
+    "File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\jbt.exe
+  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\unjbt.exe
+  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\liblzma*.dll
+  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libplist*.dll
+  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libspdlog*.dll
+  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libstdc*.dll
+  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libzip*.dll
+  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libbz2*.dll
+  File /nonfatal ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libgcc*.dll
+  File /nonfatal ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libwinpthread*.dll
+  File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\zlib*.dll")
+include(CPack)

@@ -41,17 +41,25 @@ jubeat
 jubeatskmpledata
 jukebeat
 lbfcodec
+libbz2
 libera
+libgcc
 libjsonnet
 libplist
 libsonnet
 libspdlog
+libstdc
+libwinpthread
 libzip
 linuxdeploy
+lzma
+macports
 mainpage
+makensis
 mandir
 mdfile
 msystem
+nonfatal
 nsis
 nullptr
 pacboy
@@ -66,6 +74,7 @@ schemafile
 shellformat
 softprops
 startupinfow
+stdc
 strequal
 tatsh
 ucrt
@@ -74,6 +83,7 @@ unjbt
 vedantmgoyal
 weverything
 winget
+winpthread
 wiswa
 xcrun
 yarnrc
@@ -81,3 +91,4 @@ zipcmp
 zipinfo
 zipmerge
 ziptool
+zstd
