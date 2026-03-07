@@ -40,6 +40,7 @@ jsonschema
 jubeat
 jubeatskmpledata
 jukebeat
+lbfcodec
 libera
 libjsonnet
 libplist

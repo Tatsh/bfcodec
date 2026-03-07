@@ -20,8 +20,65 @@
 [![Mastodon Follow](https://img.shields.io/mastodon/follow/109370961877277568?domain=hostux.social&style=social)](https://hostux.social/@Tatsh)
 [![Patreon](https://img.shields.io/badge/Patreon-Tatsh2-F96854?logo=patreon)](https://www.patreon.com/Tatsh2)
 
-C/C++ library to decrypt BFCodec-encrypted content
+Tools and C/C++ library to manipulate BFCodec-encrypted content.
 
-## Installation
+## How to use
 
-Not yet written.
+### jbt
+
+jbt encrypts a directory of game data then zips it up. The extension depends on the target game. You
+must use the correct key to encrypt the data.
+
+```shell
+jbt -K 'the game key' game-data/ game-data.jbt
+```
+
+### unjbt
+
+Like unzip, this extracts the zip file then decrypts each game file. Conversions will happen if
+tools are in `PATH`:
+
+| Input Format                 | Output Format     | Tool Used                                                               |
+| ---------------------------- | ----------------- | ----------------------------------------------------------------------- |
+| CgBI PNG                     | PNG               | `pngcrush`, `pngdefry`                                                  |
+| Binary Property List (plist) | XML Property List | `libplist` (non-macOS, enabled at build time), `CoreFoundation` (macOS) |
+
+```shell
+unjbt -d game-data game-data.jbt
+```
+
+If the directory passed to `-d` does not exist it will be created.
+
+### C interface
+
+```c
+#include <bfcodec.h>
+
+void func() {
+  C_BLOWFISH *blf = bfcodec_init();
+  const uint8_t my_key = {};
+  const uint8_t iv[8] = {};
+  bfcodec_expand_key(blf, &my_key, 16);
+  bfcodec_decrypt(blf, in_out_data, data_len, my_iv);
+  // or
+  bfcodec_encrypt(blf, in_out_data, data_len, my_iv);
+}
+```
+
+Link with `-lbfcodec`.
+
+### C++ interface
+
+```c++
+#include <bfcodecpp.h>
+
+void func() {
+  auto bfc = BFCodec::create();
+  bfc.expandKey({ /* key here */});
+  bfc.decrypt(inOutData, {/* IV here */});
+  // or
+  bfc.decrypt(inOutData, {/* IV here */})
+}
+```
+
+Link with `-lbfcodec`.
