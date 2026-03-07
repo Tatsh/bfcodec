@@ -8,11 +8,10 @@
       "CITATION.cff",
       "CMakeLists.txt",
       "README.md",
+      "man/jbt.1",
+      "man/unjbt.1",
       "package.json",
-      "vcpkg.json",
-      "CMakeLists.txt",
-      "man/bfcodec.1",
-      "src/main.cpp"
+      "vcpkg.json"
     ],
     "version_provider": "npm",
     "version_scheme": "semver"
