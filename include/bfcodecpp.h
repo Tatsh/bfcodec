@@ -1,8 +1,11 @@
+
+/** @file */
 #pragma once
 
 #include <cstddef>
 #include <expected>
 #include <span>
+#include <string>
 
 #include "bfcodec.h"
 
@@ -12,6 +15,19 @@ enum class BFCodecError {
     InvalidCodec,           /**< Codec instance is invalid (e.g. moved-from). */
     DataSizeNotMultipleOf8, /**< Data length is not a multiple of 8 bytes. */
 };
+
+/** Human-readable message for BFCodecError. */
+inline std::string message(BFCodecError e) {
+    switch (e) {
+    case BFCodecError::InitFailed:
+        return "Init failed.";
+    case BFCodecError::InvalidCodec:
+        return "Invalid codec.";
+    case BFCodecError::DataSizeNotMultipleOf8:
+        return "Data size not multiple of 8.";
+    }
+    return "Unknown BFCodec error.";
+}
 
 /**
  * @brief C++23 wrapper around the bfcodec C library.
