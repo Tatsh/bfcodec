@@ -9,7 +9,7 @@
 [![Tests](https://github.com/Tatsh/bfcodec/actions/workflows/tests.yml/badge.svg)](https://github.com/Tatsh/bfcodec/actions/workflows/tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/Tatsh/bfcodec/badge.svg?branch=master)](https://coveralls.io/github/Tatsh/bfcodec?branch=master)
 [![Dependabot](https://img.shields.io/badge/Dependabot-enabled-blue?logo=dependabot)](https://github.com/dependabot)
-[![GitHub Pages](https://github.com/Tatsh/bfcodec/badge/pages)](https://Tatsh.github.io/bfcodec/)
+[![GitHub Pages](https://github.com/Tatsh/bfcodec/actions/workflows/pages.yml/badge.svg)](https://tatsh.github.io/bfcodec/)
 [![Stargazers](https://img.shields.io/github/stars/Tatsh/bfcodec?logo=github&style=flat)](https://github.com/Tatsh/bfcodec/stargazers)
 [![CMake](https://img.shields.io/badge/CMake-6E6E6E?logo=cmake)](https://cmake.org/)
 [![Prettier](https://img.shields.io/badge/Prettier-enabled-black?logo=prettier)](https://prettier.io/)
