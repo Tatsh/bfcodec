@@ -1,7 +1,7 @@
 {
   security_policy_supported_versions: { '0.0.x': ':white_check_mark:' },
   project_name: 'bfcodec',
-  version: '0.0.2',
+  version: '0.0.3',
   description: 'Tools and a C/C++ library to manipulate BFCodec-encrypted content.',
   keywords: ['android', 'ios', 'konami', 'jubeat', 'jukebeat', 'reflec beat'],
   want_codeql: false,
