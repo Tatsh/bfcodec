@@ -444,10 +444,10 @@ int main(int argc, char *argv[]) {
                             "for extract, test, -c, -p.");
 
     program.add_argument("-K", "--key")
-        .help("Passphrase (MD5-hashed to 16 bytes); default: \"Konami Bemani Mobile iPad\".");
+        .help("Passphrase (MD5-hashed to 16 bytes); default is the passphrase for jubeat Plus.");
     program.add_argument("--key-file")
         .help("Path to key file (first 16 bytes used; overrides default passphrase).");
-    program.add_argument("--iv").help("IV as hex (default from assembly).");
+    program.add_argument("--iv").help("IV as hex.");
     program.add_argument("--iv-file").help("Path to IV file (first 8 bytes used).");
 
     program.add_argument("-l")
