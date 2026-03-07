@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(bfcodec VERSION 1.0.0 LANGUAGES C CXX)
+project(bfcodec VERSION 0.0.0 LANGUAGES C CXX)
 
 include(GNUInstallDirs)
 
@@ -7,13 +7,13 @@ set(CMAKE_C_STANDARD 23)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
-option(BUILD_DOCS "Build documentation" OFF)
-option(BUILD_DOCS_ONLY "Build documentation only" OFF)
-option(BUILD_TESTS "Build unit tests" ON)
-option(BUILD_TOOLS "Build tools (jbt, unjbt, bfcodec)" ON)
-option(COVERAGE "Enable code coverage" OFF)
-option(CXX_WARN_ALL "Enable extra compiler warnings (Debug + Clang only)" OFF)
-option(EXTRA_DOCS "Install extra documentation (README, LICENSE)" OFF)
+option(BUILD_DOCS "Build documentation." OFF)
+option(BUILD_DOCS_ONLY "Build documentation only." OFF)
+option(BUILD_TESTS "Build unit tests." OFF)
+option(BUILD_TOOLS "Build tools." ON)
+option(COVERAGE "Enable code coverage." OFF)
+option(CXX_WARN_ALL "Enable extra compiler warnings." OFF)
+option(EXTRA_DOCS "Install extra documentation." ON)
 mark_as_advanced(CXX_WARN_ALL)
 
 if(NOT BUILD_DOCS_ONLY)
@@ -52,7 +52,6 @@ if(NOT BUILD_DOCS_ONLY)
 	if(BUILD_TOOLS)
 		add_subdirectory(tools)
 		install(FILES
-			man/bfcodec.1
 			man/jbt.1
 			man/unjbt.1
 			DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
@@ -62,12 +61,21 @@ endif()
 
 if(BUILD_DOCS OR BUILD_DOCS_ONLY)
 	set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${CMAKE_SOURCE_DIR}/README.md")
-	set(DOXYGEN_GENERATE_HTML YES)
-	set(DOXYGEN_GENERATE_MAN NO)
+  if (EXTRA_DOCS)
+	  set(DOXYGEN_GENERATE_HTML YES)
+  endif()
+	set(DOXYGEN_GENERATE_MAN YES)
 	find_package(Doxygen REQUIRED)
 	doxygen_add_docs(docs README.md include src ALL)
 endif()
 
+install(FILES README.md CHANGELOG.md SECURITY.md TYPE DOC)
+install(FILES CITATION.cff DESTINATION ${CMAKE_INSTALL_DATADIR}/bfcodec)
+if(BUILD_DOCS)
+  install(FILES ${CMAKE_BINARY_DIR}/man/man3/bfcodec.h.3
+              ${CMAKE_BINARY_DIR}/man/man3/bfcodecpp.h.3
+              TYPE MAN)
+endif()
 if(EXTRA_DOCS)
-	install(FILES README.md LICENSE.txt TYPE DOC)
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/html DESTINATION ${CMAKE_INSTALL_DATADIR}/bfcodec)
 endif()
