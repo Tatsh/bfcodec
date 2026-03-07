@@ -564,7 +564,7 @@ int main(int argc, char *argv[]) {
     }
     auto codec = Tools::createCodec(keyIv->keyBytes);
     if (!codec) {
-        spdlog::error("{}", message(codec.error()));
+        spdlog::error("{}", BFCodec::message(codec.error()));
         return EXIT_FAILURE;
     }
 

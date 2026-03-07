@@ -17,64 +17,64 @@ option(EXTRA_DOCS "Install extra documentation." ON)
 mark_as_advanced(CXX_WARN_ALL)
 
 if(NOT BUILD_DOCS_ONLY)
-	add_compile_options($<$<AND:$<CXX_COMPILER_ID:Clang,GNU>,$<BOOL:${COVERAGE}>>:--coverage>)
-	add_link_options($<$<AND:$<CXX_COMPILER_ID:Clang,GNU>,$<BOOL:${COVERAGE}>>:--coverage>)
+  add_compile_options($<$<AND:$<CXX_COMPILER_ID:Clang,GNU>,$<BOOL:${COVERAGE}>>:--coverage>)
+  add_link_options($<$<AND:$<CXX_COMPILER_ID:Clang,GNU>,$<BOOL:${COVERAGE}>>:--coverage>)
 
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CXX_WARN_ALL)
-		if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-			set(BFCODEC_APPLY_WARN_ALL TRUE)
-			set(BFCODEC_WARN_ALL_C_FLAGS
-				"$<IF:$<COMPILE_LANGUAGE:C>,-Weverything,>"
-				"$<IF:$<COMPILE_LANGUAGE:C>,-Wno-declaration-after-statement,>"
-				"$<IF:$<COMPILE_LANGUAGE:C>,-Wno-disabled-macro-expansion,>"
-				"$<IF:$<COMPILE_LANGUAGE:C>,-Wno-padded,>"
-				"$<IF:$<COMPILE_LANGUAGE:C>,-Wno-pre-c11-compat,>"
-				"$<IF:$<COMPILE_LANGUAGE:C>,-Wno-reserved-id-macro,>"
-				"$<IF:$<COMPILE_LANGUAGE:C>,-Wno-unsafe-buffer-usage,>")
-			set(BFCODEC_WARN_ALL_CXX_FLAGS
-				"$<IF:$<COMPILE_LANGUAGE:CXX>,-fsafe-buffer-usage-suggestions,>"
-				"$<IF:$<COMPILE_LANGUAGE:CXX>,-Weverything,>"
-				"$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-c++98-compat,>"
-				"$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-c++98-compat-pedantic,>"
-				"$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-exit-time-destructors,>"
-				"$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-global-constructors,>"
-				"$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-padded,>")
-		endif()
-	endif()
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug" AND CXX_WARN_ALL)
+    if(CMAKE_C_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      set(BFCODEC_APPLY_WARN_ALL TRUE)
+      set(BFCODEC_WARN_ALL_C_FLAGS
+        "$<IF:$<COMPILE_LANGUAGE:C>,-Weverything,>"
+        "$<IF:$<COMPILE_LANGUAGE:C>,-Wno-declaration-after-statement,>"
+        "$<IF:$<COMPILE_LANGUAGE:C>,-Wno-disabled-macro-expansion,>"
+        "$<IF:$<COMPILE_LANGUAGE:C>,-Wno-padded,>"
+        "$<IF:$<COMPILE_LANGUAGE:C>,-Wno-pre-c11-compat,>"
+        "$<IF:$<COMPILE_LANGUAGE:C>,-Wno-reserved-id-macro,>"
+        "$<IF:$<COMPILE_LANGUAGE:C>,-Wno-unsafe-buffer-usage,>")
+      set(BFCODEC_WARN_ALL_CXX_FLAGS
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-fsafe-buffer-usage-suggestions,>"
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Weverything,>"
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-c++98-compat,>"
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-c++98-compat-pedantic,>"
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-exit-time-destructors,>"
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-global-constructors,>"
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-padded,>")
+    endif()
+  endif()
 
-	if(BUILD_TESTS)
-		enable_testing()
-		add_subdirectory(tests)
-	endif()
+  if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+  endif()
 
-	add_subdirectory(src)
+  add_subdirectory(src)
 
-	if(BUILD_TOOLS)
-		add_subdirectory(tools)
-		install(FILES
-			man/jbt.1
-			man/unjbt.1
-			DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
-		)
-	endif()
+  if(BUILD_TOOLS)
+    add_subdirectory(tools)
+    install(FILES
+      man/jbt.1
+      man/unjbt.1
+      DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+    )
+  endif()
 endif()
 
 if(BUILD_DOCS OR BUILD_DOCS_ONLY)
-	set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${CMAKE_SOURCE_DIR}/README.md")
-  if (EXTRA_DOCS)
-	  set(DOXYGEN_GENERATE_HTML YES)
+  set(DOXYGEN_USE_MDFILE_AS_MAINPAGE "${CMAKE_SOURCE_DIR}/README.md")
+  if(EXTRA_DOCS)
+    set(DOXYGEN_GENERATE_HTML YES)
   endif()
-	set(DOXYGEN_GENERATE_MAN YES)
-	find_package(Doxygen REQUIRED)
-	doxygen_add_docs(docs README.md include src ALL)
+  set(DOXYGEN_GENERATE_MAN YES)
+  find_package(Doxygen REQUIRED)
+  doxygen_add_docs(docs README.md include src ALL)
 endif()
 
 install(FILES README.md CHANGELOG.md SECURITY.md TYPE DOC)
 install(FILES CITATION.cff DESTINATION ${CMAKE_INSTALL_DATADIR}/bfcodec)
 if(BUILD_DOCS)
   install(FILES ${CMAKE_BINARY_DIR}/man/man3/bfcodec.h.3
-              ${CMAKE_BINARY_DIR}/man/man3/bfcodecpp.h.3
-              TYPE MAN)
+    ${CMAKE_BINARY_DIR}/man/man3/bfcodecpp.h.3
+    TYPE MAN)
 endif()
 if(EXTRA_DOCS)
   install(DIRECTORY ${CMAKE_BINARY_DIR}/html DESTINATION ${CMAKE_INSTALL_DATADIR}/bfcodec)

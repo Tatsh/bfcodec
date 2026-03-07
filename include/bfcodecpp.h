@@ -16,19 +16,6 @@ enum class BFCodecError {
     DataSizeNotMultipleOf8, /**< Data length is not a multiple of 8 bytes. */
 };
 
-/** Human-readable message for BFCodecError. */
-inline std::string message(BFCodecError e) {
-    switch (e) {
-    case BFCodecError::InitFailed:
-        return "Init failed.";
-    case BFCodecError::InvalidCodec:
-        return "Invalid codec.";
-    case BFCodecError::DataSizeNotMultipleOf8:
-        return "Data size not multiple of 8.";
-    }
-    return "Unknown BFCodec error.";
-}
-
 /**
  * @brief C++23 wrapper around the bfcodec C library.
  *
@@ -43,6 +30,9 @@ public:
      * @return The codec on success, or std::unexpected(BFCodecError::InitFailed) on failure.
      */
     static std::expected<BFCodec, BFCodecError> create();
+
+    /** Human-readable message for BFCodecError. */
+    static std::string message(BFCodecError e);
 
     BFCodec(const BFCodec &) = delete;
     BFCodec &operator=(const BFCodec &) = delete;

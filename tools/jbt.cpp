@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 
     auto codec = Tools::createCodec(keyIv->keyBytes);
     if (!codec) {
-        spdlog::error("{}", message(codec.error()));
+        spdlog::error("{}", BFCodec::message(codec.error()));
         return EXIT_FAILURE;
     }
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
         std::span<std::byte> span = std::as_writable_bytes(std::span(buf));
         auto result = codec->encrypt(span, keyIv->ivBytes);
         if (!result) {
-            spdlog::error("{} for {}.", message(result.error()), filePath.string());
+            spdlog::error("{} for {}.", BFCodec::message(result.error()), filePath.string());
             zip_close(zip);
             return EXIT_FAILURE;
         }

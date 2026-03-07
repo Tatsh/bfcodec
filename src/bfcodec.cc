@@ -1,9 +1,22 @@
 #include <cstdlib>
+#include <string>
 #include <utility>
 
 #include "bfcodecpp.h"
 
 BFCodec::BFCodec(C_BLOWFISH *blf) noexcept : blf_(blf) {
+}
+
+std::string BFCodec::message(BFCodecError e) {
+    switch (e) {
+    case BFCodecError::InitFailed:
+        return "Init failed.";
+    case BFCodecError::InvalidCodec:
+        return "Invalid codec.";
+    case BFCodecError::DataSizeNotMultipleOf8:
+        return "Data size not multiple of 8.";
+    }
+    return "Unknown BFCodec error.";
 }
 
 std::expected<BFCodec, BFCodecError> BFCodec::create() {
