@@ -10,8 +10,10 @@
 #include "bfcodec.h"
 
 struct C_BLOWFISH {
+    /** @cond INTERNAL_HIDDEN */
     uint32_t p[18];
     uint32_t s[4][256];
+    /** @endcond */
 };
 
 #define BF_INIT_BYTES_LEN (18 * 4 + 4 * 256 * 4)

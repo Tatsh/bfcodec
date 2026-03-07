@@ -1,3 +1,4 @@
+/** @file */
 #ifndef BFCODEC_H
 #define BFCODEC_H
 
@@ -8,11 +9,7 @@
 extern "C" {
 #endif
 
-/**
- * @brief Blowfish codec state (custom P/S boxes, pi-derived).
- *
- * Opaque type.
- */
+/** @brief Blowfish codec state. */
 struct C_BLOWFISH;
 typedef struct C_BLOWFISH C_BLOWFISH;
 
