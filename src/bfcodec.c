@@ -1,8 +1,3 @@
-/*
- * Blowfish codec (custom P/S from pi) — encrypt/decrypt, CBC.
- * Matches decrypt_info.py: F = (S0[a]+S1[b]) ^ (S2[c]+S3[d]), BE block I/O.
- */
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,8 +37,9 @@ static uint32_t bf_f(C_BLOWFISH *blf, uint32_t x) {
     uint32_t b = (x >> 16) & 0xff;
     uint32_t c = (x >> 8) & 0xff;
     uint32_t d = x & 0xff;
-    uint32_t t = (blf->s[0][a] + blf->s[1][b]) ^ (blf->s[2][c] + blf->s[3][d]);
-    return t;
+    // This operation is the only difference from standard Blowfish.
+    // Normally this would be `((S[0][a] + S[1][b]) ^ S[2][c]) + S[3][d]`.
+    return (blf->s[0][a] + blf->s[1][b]) ^ (blf->s[2][c] + blf->s[3][d]);
 }
 
 static void bf_encrypt_block(C_BLOWFISH *blf, uint32_t *L, uint32_t *R) {
@@ -75,9 +71,9 @@ static void bf_decrypt_block(C_BLOWFISH *blf, uint32_t *L, uint32_t *R) {
 }
 
 C_BLOWFISH *bfcodec_init(void) {
-    C_BLOWFISH *blf = (C_BLOWFISH *)malloc(sizeof(C_BLOWFISH));
+    C_BLOWFISH *blf = malloc(sizeof(C_BLOWFISH));
     if (!blf) {
-        return NULL;
+        return nullptr;
     }
 
     size_t idx = 0;
