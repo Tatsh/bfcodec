@@ -4,6 +4,11 @@
 
 #include "bfcodec.h"
 
+#if !HAVE_NULLPTR_T
+//! `nullptr` definition if not defined by `stddef.h`.
+#define nullptr (void *)0
+#endif
+
 struct C_BLOWFISH {
     /** @cond INTERNAL_HIDDEN */
     uint32_t p[18];

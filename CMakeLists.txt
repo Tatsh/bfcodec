@@ -20,6 +20,15 @@ option(EXTRA_DOCS "Install extra documentation." ON)
 mark_as_advanced(CXX_WARN_ALL)
 
 if(NOT BUILD_DOCS_ONLY)
+  if(WIN32)
+    check_type_size(nullptr_t STD_NULLPTR_T BUILTIN_TYPES_ONLY LANGUAGE C)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS
+                            _UNICODE
+                            HAVE_NULLPTR_T=$<IF:$<BOOL:${HAVE_STD_NULLPTR_T}>,1,0>
+                            UNICODE
+                            WIN32_LEAN_AND_MEAN)
+  endif()
+
   add_compile_options($<$<AND:$<CXX_COMPILER_ID:Clang,GNU>,$<BOOL:${COVERAGE}>>:--coverage>)
   add_link_options($<$<AND:$<CXX_COMPILER_ID:Clang,GNU>,$<BOOL:${COVERAGE}>>:--coverage>)
 
