@@ -18,6 +18,13 @@ std::array<std::byte, 8> make_iv(uint8_t a = 0) {
 
 } // namespace
 
+TEST(BFCodec, MessageReturnsStringsForAllErrors) {
+    EXPECT_EQ(BFCodec::message(BFCodecError::InitFailed), "Init failed.");
+    EXPECT_EQ(BFCodec::message(BFCodecError::InvalidCodec), "Invalid codec.");
+    EXPECT_EQ(BFCodec::message(BFCodecError::DataSizeNotMultipleOf8),
+              "Data size not multiple of 8.");
+}
+
 TEST(BFCodec, CreateSucceeds) {
     auto result = BFCodec::create();
     ASSERT_TRUE(result.has_value()) << "create() should succeed";

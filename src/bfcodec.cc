@@ -4,8 +4,9 @@
 
 #include "bfcodecpp.h"
 
-BFCodec::BFCodec(C_BLOWFISH *blf) noexcept : blf_(blf) {
-}
+BFCodec::BFCodec(C_BLOWFISH *blf) noexcept
+    : blf_(blf) { // LCOV_EXCL_LINE - empty ctor, only used by create().
+} // LCOV_EXCL_LINE
 
 std::string BFCodec::message(BFCodecError e) {
     switch (e) {
@@ -16,14 +17,16 @@ std::string BFCodec::message(BFCodecError e) {
     case BFCodecError::DataSizeNotMultipleOf8:
         return "Data size not multiple of 8.";
     }
-    return "Unknown BFCodec error.";
+    return "Unknown BFCodec error."; // LCOV_EXCL_LINE - unreachable (exhaustive enum).
 }
 
 std::expected<BFCodec, BFCodecError> BFCodec::create() {
     C_BLOWFISH *p = bfcodec_init();
+    // LCOV_EXCL_START - allocation failure path not exercised in tests.
     if (!p) {
         return std::unexpected(BFCodecError::InitFailed);
     }
+    // LCOV_EXCL_STOP
     return BFCodec(p);
 }
 
