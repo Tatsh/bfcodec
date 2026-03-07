@@ -17,7 +17,7 @@ option(BUILD_TESTS "Build unit tests." OFF)
 option(BUILD_TOOLS "Build tools." ON)
 option(COVERAGE "Enable code coverage." OFF)
 option(CXX_WARN_ALL "Enable extra compiler warnings." OFF)
-option(EXTRA_DOCS "Install extra documentation." ON)
+option(EXTRA_DOCS "Install extra documentation." OFF)
 mark_as_advanced(CXX_WARN_ALL)
 
 if(NOT BUILD_DOCS_ONLY)
