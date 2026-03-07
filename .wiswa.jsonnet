@@ -13,8 +13,9 @@
   package_json+: {
     cspell+: {
       ignorePaths+: [
-        '.docs/*.tags',
+        '*.patch',
         '.docs/*.tag.xml',
+        '.docs/*.tags',
       ],
     },
     local clang_format_globs = 'include/*.h src/*.c* tools/*.c* tools/*.h',
@@ -23,7 +24,7 @@
       format: 'clang-format -i %s && yarn prettier -w .' % clang_format_globs,
     },
   },
-  prettierignore+: ['*.cc', '*.inc', '*.tags'],
+  prettierignore+: ['*.cc', '*.inc', '*.patch', '*.tags'],
   cz+: {
     commitizen+: {
       version_files+: [

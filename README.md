@@ -26,7 +26,7 @@ Tools and a C/C++ library to manipulate BFCodec-encrypted content.
 
 ### jbt
 
-jbt encrypts a directory of game data then zips it up. The extension depends on the target game. You
+`jbt` encrypts a directory of game data then zips it up. The extension depends on the target game. You
 must use the correct key to encrypt the data.
 
 ```shell
@@ -35,7 +35,7 @@ jbt -K 'the game key' game-data/ game-data.jbt
 
 ### unjbt
 
-Like unzip, this extracts the zip file then decrypts each game file. Conversions will happen if
+Like `unzip`, `unjbt` extracts the zip file then decrypts each game file. Conversions will happen if
 tools are in `PATH`:
 
 | Input Format                 | Output Format     | Tool Used                                                         |
@@ -50,7 +50,7 @@ pngdefry can be downloaded from [its official site (archived)](https://web.archi
 unjbt -d game-data game-data.jbt
 ```
 
-If the directory passed to `-d` does not exist it will be created.
+If the directory passed to `-d`/`--extract-to` does not exist it will be created.
 
 ### C interface
 

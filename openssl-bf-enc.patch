@@ -1,0 +1,12 @@
+diff --git a/crypto/bf/bf_local.h b/crypto/bf/bf_local.h
+index 8634a57ceb..fad6ccb548 100644
+--- a/crypto/bf/bf_local.h
++++ b/crypto/bf/bf_local.h
+@@ -93,6 +93,6 @@
+ 
+ #define BF_ENC(LL, R, S, P) ( \
+     LL ^= P,                  \
+-    LL ^= (((S[((R >> 24) & 0xff)] + S[0x0100 + ((R >> 16) & 0xff)]) ^ S[0x0200 + ((R >> 8) & 0xff)]) + S[0x0300 + ((R) & 0xff)]) & 0xffffffffU)
++    LL ^= ((S[((R >> 24) & 0xff)] + S[0x0100 + ((R >> 16) & 0xff)]) ^ (S[0x0200 + ((R >> 8) & 0xff)] + S[0x0300 + ((R) & 0xff)])) & 0xffffffffU)
+ 
+ #endif
