@@ -38,12 +38,13 @@ jbt -K 'the game key' game-data/ game-data.jbt
 Like unzip, this extracts the zip file then decrypts each game file. Conversions will happen if
 tools are in `PATH`:
 
-| Input Format                 | Output Format     | Tool Used                                                               |
-| ---------------------------- | ----------------- | ----------------------------------------------------------------------- |
-| CgBI PNG                     | PNG               | `pngcrush`, `pngdefry`                                                  |
-| Binary Property List (plist) | XML Property List | `libplist` (non-macOS, enabled at build time), `CoreFoundation` (macOS) |
+| Input Format                 | Output Format     | Tool Used                                                         |
+| ---------------------------- | ----------------- | ----------------------------------------------------------------- |
+| Binary Property List (plist) | XML Property List | `libplist` (if found at configure time), `CoreFoundation` (macOS) |
+| CgBI PNG                     | PNG               | `pngcrush`, `pngdefry`                                            |
 
 pngdefry can be downloaded from [its official site (archived)](https://web.archive.org/web/20211120053356/http://www.jongware.com/pngdefry.html).
+`pngcrush` is only available on macOS if you have Xcode installed.
 
 ```shell
 unjbt -d game-data game-data.jbt
