@@ -7,7 +7,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install deps
-        run: brew install extra-cmake-modules ffmpeg qt sound-touch
+        run: brew install libzip
       - run: |
           cmake -G Ninja -B build -DCMAKE_BUILD_TYPE=${{matrix.build-type}} \
             --install-prefix ${{github.workspace}}/build/prefix
@@ -21,24 +21,21 @@ jobs:
         uses: 'actions/upload-artifact@v6'
         with:
           if-no-files-found: error
-          name: bpmdetect-${{ matrix.build-type }}-${{ matrix.os }}
+          name: bfcodec-${{ matrix.build-type }}-${{ matrix.os }}
           path: |
-            ${{github.workspace}}/bpmdetect-*.zip
-            ${{github.workspace}}/bpmdetect-*.dmg
+            ${{github.workspace}}/bfcodec-*.zip
       - name: Attest
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: |
-            ${{github.workspace}}/bpmdetect-*.zip
-            ${{github.workspace}}/bpmdetect-*.dmg
+            ${{github.workspace}}/bfcodec-*.zip
       - if: ${{ github.ref_type == 'tag' }}
         name: Upload package
         uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
           files: |
-            ${{github.workspace}}/bpmdetect-*.zip
-            ${{github.workspace}}/bpmdetect-*.dmg
+            ${{github.workspace}}/bfcodec-*.zip
     strategy:
       fail-fast: false
       matrix:
@@ -59,16 +56,10 @@ jobs:
           msystem: ${{matrix.sys.name}}
           pacboy: >-
             cmake:p
-            extra-cmake-modules:p
-            ffmpeg:p
             ninja:p
             nsis:p
-            qt6-base:p
-            qt6-multimedia:p
-            qt6-tools:p
-            soundtouch:p
             toolchain:p
-            zlib:p
+            libzip:p
           update: true
       - uses: actions/checkout@v6
         with:
@@ -78,7 +69,6 @@ jobs:
           cmake -G Ninja -B ${{steps.fixed_workspace.outputs.out}}/build
           --install-prefix ${{steps.fixed_workspace.outputs.out}}/build/prefix
           -DCMAKE_BUILD_TYPE=${{matrix.build-type}}
-          -DFHS=OFF
         shell: msys2 {0}
       - name: Build
         run: cmake --build ${{steps.fixed_workspace.outputs.out}}/build --verbose
@@ -97,24 +87,24 @@ jobs:
         uses: 'actions/upload-artifact@v6'
         with:
           if-no-files-found: error
-          name: bpmdetect-${{ matrix.build-type }}-${{ matrix.sys.name }}
+          name: bfcodec-${{ matrix.build-type }}-${{ matrix.sys.name }}
           path: |
-            ${{github.workspace}}/bpmdetect-*.exe
-            ${{github.workspace}}/bpmdetect-*.zip
+            ${{github.workspace}}/bfcodec-*.exe
+            ${{github.workspace}}/bfcodec-*.zip
       - name: Attest
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: |
-            ${{github.workspace}}/bpmdetect-*.exe
-            ${{github.workspace}}/bpmdetect-*.zip
+            ${{github.workspace}}/bfcodec-*.exe
+            ${{github.workspace}}/bfcodec-*.zip
       - if: ${{ github.ref_type == 'tag' && matrix.sys.name == 'ucrt64' }}
         name: Upload package
         uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
           files: |
-            ${{github.workspace}}/bpmdetect-*.exe
-            ${{github.workspace}}/bpmdetect-*.zip
+            ${{github.workspace}}/bfcodec-*.exe
+            ${{github.workspace}}/bfcodec-*.zip
     strategy:
       fail-fast: false
       matrix:
@@ -133,17 +123,12 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y extra-cmake-modules lcov libavcodec-dev libavformat-dev libavutil-dev libsoundtouch-dev tree
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          modules: qtmultimedia
+          sudo apt-get install -y libplist-dev libssl-dev libzip-dev zipcmp zipmerge ziptool
       - name: Configure
         run: >-
           cmake -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -B ${{github.workspace}}/build
           --install-prefix ${{github.workspace}}/build/AppDir/usr
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
-          -DFHS=ON
       - name: Build
         run: cmake --build ${{github.workspace}}/build --verbose --config ${{matrix.build-type}}
       - name: Install
@@ -158,31 +143,31 @@ jobs:
           chmod +x linuxdeploy-x86_64.AppImage
           ./linuxdeploy-x86_64.AppImage --appdir ${{github.workspace}}/build/AppDir --output appimage
           rm ./linuxdeploy-x86_64.AppImage
-          mv -v ${{github.workspace}}/*.AppImage ${{github.workspace}}/bpmdetect-${{matrix.build-type}}-x86_64.AppImage
+          mv -v ${{github.workspace}}/*.AppImage ${{github.workspace}}/bfcodec-${{matrix.build-type}}-x86_64.AppImage
       - if: ${{ github.ref_type == 'tag' && matrix.build-type == 'Release' }}
         name: Rename with tag
-        run: mv -v ${{github.workspace}}/bpmdetect-*.AppImage ${{github.workspace}}/bpmdetect-${{github.ref_name}}-x86_64.AppImage
+        run: mv -v ${{github.workspace}}/bfcodec-*.AppImage ${{github.workspace}}/bfcodec-${{github.ref_name}}-x86_64.AppImage
       - name: 'Upload Artifacts'
         uses: 'actions/upload-artifact@v6'
         with:
           if-no-files-found: error
-          name: bpmdetect-${{ matrix.build-type }}-Linux
+          name: bfcodec-${{ matrix.build-type }}-Linux
           path: |
-            ${{github.workspace}}/bpmdetect-*.AppImage
-            ${{github.workspace}}/bpmdetect-*.zip
+            ${{github.workspace}}/bfcodec-*.AppImage
+            ${{github.workspace}}/bfcodec-*.zip
       - name: Attest
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: |
-            ${{github.workspace}}/bpmdetect-*.AppImage
-            ${{github.workspace}}/bpmdetect-*.zip
+            ${{github.workspace}}/bfcodec-*.AppImage
+            ${{github.workspace}}/bfcodec-*.zip
       - if: ${{ github.ref_type == 'tag' && matrix.build-type == 'Release' }}
         name: Upload package
         uses: softprops/action-gh-release@v2
         with:
           fail_on_unmatched_files: true
           files: |
-            ${{github.workspace}}/build/bpmdetect-*.AppImage
+            ${{github.workspace}}/build/bfcodec-*.AppImage
     strategy:
       fail-fast: false
       matrix:

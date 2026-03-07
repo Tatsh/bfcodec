@@ -11,7 +11,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y lcov libplist-dev libzip-dev zipcmp zipmerge ziptool
+          sudo apt-get install -y lcov libplist-dev libssl-dev libzip-dev zipcmp zipmerge ziptool
       - name: Configure
         run: >-
           cmake -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -B ${{github.workspace}}/build
