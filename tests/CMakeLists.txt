@@ -13,7 +13,7 @@ enable_testing()
 
 add_executable(bfcodec_test bfcodec_test.cpp)
 target_link_libraries(bfcodec_test PRIVATE
-  bfcodec_core
+  bfcodec
   gtest_main
 )
 target_include_directories(bfcodec_test PRIVATE
