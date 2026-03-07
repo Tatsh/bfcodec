@@ -48,8 +48,9 @@ inline std::string message(ExtractError e) {
         return "Cannot create directory.";
     case ExtractError::FileWriteFailed:
         return "Write failed.";
+    default:
+        return "Unknown extract error.";
     }
-    return "Unknown extract error.";
 }
 
 struct Options {
@@ -167,8 +168,8 @@ static bool isDirEntry(const char *name) {
     if (!name) {
         return false;
     }
-    size_t len = std::strlen(name);
-    return len > 0 && name[len - 1] == '/';
+    std::string_view sv(name);
+    return !sv.empty() && sv.back() == '/';
 }
 
 void listShort(zip_t *zip, const Options &opts, const fs::path &archivePath) {
@@ -319,9 +320,11 @@ std::expected<void, ExtractError> extractZip(const fs::path &archivePath,
         }
         std::vector<uint8_t> buf(st.size);
         zip_int64_t total = 0;
-        while (total < static_cast<zip_int64_t>(st.size)) {
-            zip_int64_t nr =
-                zip_fread(zf, buf.data() + total, static_cast<zip_uint64_t>(st.size - total));
+        while (static_cast<zip_uint64_t>(total) < st.size) {
+            const zip_uint64_t remaining = st.size - static_cast<zip_uint64_t>(total);
+            std::span<uint8_t> writeRegion(buf.data() + total, remaining);
+            const zip_int64_t nr =
+                zip_fread(zf, writeRegion.data(), static_cast<zip_uint64_t>(writeRegion.size()));
             if (nr <= 0) {
                 zip_fclose(zf);
                 zip_close(zip);
@@ -350,7 +353,7 @@ void decryptExtractedFiles(const fs::path &outDir,
                            size_t &skippedCount,
                            size_t &pngFixedCount,
                            size_t *bplistConvertedCount,
-                           int quiet) {
+                           [[maybe_unused]] int quiet) {
     decryptedCount = 0;
     skippedCount = 0;
     pngFixedCount = 0;

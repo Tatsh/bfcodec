@@ -4,11 +4,6 @@
 
 #include "bfcodec.h"
 
-#if !HAVE_NULLPTR_T
-//! `nullptr` definition if not defined by `stddef.h`.
-#define nullptr (void *)0
-#endif
-
 struct C_BLOWFISH {
     /** @cond INTERNAL_HIDDEN */
     uint32_t p[18];
@@ -76,10 +71,10 @@ static void bf_decrypt_block(C_BLOWFISH *blf, uint32_t *L, uint32_t *R) {
 }
 
 C_BLOWFISH *bfcodec_init(void) {
-    C_BLOWFISH *blf = malloc(sizeof(C_BLOWFISH));
+    C_BLOWFISH *blf = (C_BLOWFISH *)malloc(sizeof(C_BLOWFISH));
     // LCOV_EXCL_START - allocation failure path not exercised in tests.
     if (!blf) {
-        return nullptr;
+        return NULL;
     }
     // LCOV_EXCL_STOP
 

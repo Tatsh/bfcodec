@@ -16,8 +16,9 @@ std::string BFCodec::message(BFCodecError e) {
         return "Invalid codec.";
     case BFCodecError::DataSizeNotMultipleOf8:
         return "Data size not multiple of 8.";
+    default:
+        return "Unknown BFCodec error.";
     }
-    return "Unknown BFCodec error."; // LCOV_EXCL_LINE - unreachable (exhaustive enum).
 }
 
 std::expected<BFCodec, BFCodecError> BFCodec::create() {

@@ -3,6 +3,11 @@ add_library(bfcodec
   bfcodec.cc
 )
 
+# Ensure .c file is compiled as C (avoids C++-only warnings when C compiler is clang++).
+if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+  set_source_files_properties(bfcodec.c PROPERTIES COMPILE_OPTIONS "-x;c")
+endif()
+
 target_include_directories(bfcodec PUBLIC
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>

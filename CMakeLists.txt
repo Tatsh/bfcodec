@@ -27,10 +27,8 @@ mark_as_advanced(CXX_WARN_ALL)
 
 if(NOT BUILD_DOCS_ONLY)
   if(WIN32)
-    check_type_size(nullptr_t STD_NULLPTR_T BUILTIN_TYPES_ONLY LANGUAGE C)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS
                             _UNICODE
-                            HAVE_NULLPTR_T=$<IF:$<BOOL:${HAVE_STD_NULLPTR_T}>,1,0>
                             UNICODE
                             WIN32_LEAN_AND_MEAN)
   endif()
@@ -54,9 +52,12 @@ if(NOT BUILD_DOCS_ONLY)
         "$<IF:$<COMPILE_LANGUAGE:CXX>,-Weverything,>"
         "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-c++98-compat,>"
         "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-c++98-compat-pedantic,>"
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-covered-switch-default,>"
         "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-exit-time-destructors,>"
         "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-global-constructors,>"
-        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-padded,>")
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-padded,>"
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-unsafe-buffer-usage,>"
+        "$<IF:$<COMPILE_LANGUAGE:CXX>,-Wno-unsafe-buffer-usage-in-container,>")
     endif()
   endif()
 

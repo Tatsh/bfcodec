@@ -10,8 +10,9 @@ std::string message(ParseError e) {
         return "Invalid hex character.";
     case ParseError::OddHexDigits:
         return "Odd number of hex digits.";
+    default:
+        return "Unknown parse error.";
     }
-    return "Unknown parse error.";
 }
 
 std::string message(FileError e) {
@@ -22,8 +23,9 @@ std::string message(FileError e) {
         return "File size must be exactly required bytes.";
     case FileError::WriteFailed:
         return "Write failed.";
+    default:
+        return "Unknown file error.";
     }
-    return "Unknown file error.";
 }
 
 std::string message(KeyIvError e) {
@@ -46,8 +48,9 @@ std::string message(KeyIvError e) {
         return "IV must be exactly 8 bytes (16 hex digits).";
     case KeyIvError::IvReadFailed:
         return "Cannot read IV file.";
+    default:
+        return "Unknown key/IV error.";
     }
-    return "Unknown key/IV error.";
 }
 
 std::string message(PlistError e) {
@@ -62,8 +65,9 @@ std::string message(PlistError e) {
         return "CFPropertyListCreateWithData failed.";
     case PlistError::CFPropertyListCreateDataFailed:
         return "CFPropertyListCreateData failed.";
+    default:
+        return "Unknown plist error.";
     }
-    return "Unknown plist error.";
 }
 
 int fromHexChar(char c) {
@@ -215,8 +219,9 @@ std::expected<KeyIv, KeyIvError> getKeyIv(argparse::ArgumentParser &program) {
         if (passphraseOpt->empty()) {
             return std::unexpected(KeyIvError::KeyEmpty);
         }
+        std::string_view passphraseSv(*passphraseOpt);
         std::span<const std::byte> passphrase(
-            reinterpret_cast<const std::byte *>(passphraseOpt->data()), passphraseOpt->size());
+            reinterpret_cast<const std::byte *>(passphraseSv.data()), passphraseSv.size());
         auto digest = md5Key(passphrase);
         if (!digest) {
             return std::unexpected(digest.error());
@@ -348,8 +353,8 @@ std::expected<std::vector<uint8_t>, PlistError> bplistToXml(std::span<const uint
         plist_free(root);
         return std::unexpected(PlistError::ToXmlFailed);
     }
-    std::vector<uint8_t> out(reinterpret_cast<uint8_t *>(xml),
-                             reinterpret_cast<uint8_t *>(xml) + length);
+    std::span<uint8_t> xmlSpan(reinterpret_cast<uint8_t *>(xml), length);
+    std::vector<uint8_t> out(xmlSpan.begin(), xmlSpan.end());
     plist_mem_free(xml);
     plist_free(root);
     return out;

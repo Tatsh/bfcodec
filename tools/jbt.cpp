@@ -2,8 +2,10 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <span>
 #include <sstream>
 #include <string>
+#include <string_view>
 
 #include <spdlog/spdlog.h>
 #include <zip.h>
@@ -13,6 +15,7 @@
 namespace fs = std::filesystem;
 
 int main(int argc, char *argv[]) {
+    std::span args(argv, static_cast<size_t>(argc));
     argparse::ArgumentParser program("jbt");
     program.add_description("Create a .jbt/.orb/.rb archive (zip) by encrypting all files in a "
                             "directory using BFCodec.");
@@ -32,8 +35,8 @@ int main(int argc, char *argv[]) {
 
     spdlog::set_pattern("%v");
 
-    for (int i = 1; i < argc; ++i) {
-        if (std::strcmp(argv[i], "-V") == 0) {
+    for (size_t i = 1; i < args.size(); ++i) {
+        if (std::string_view(args[i]) == "-V") {
             spdlog::info("jbt v" BFCODEC_VERSION);
             return EXIT_SUCCESS;
         }
@@ -137,7 +140,7 @@ int main(int argc, char *argv[]) {
             zip_close(zip);
             return EXIT_FAILURE;
         }
-        std::memcpy(copy, out.data(), out.size());
+        std::copy(out.begin(), out.end(), copy);
 
         zip_source_t *src = zip_source_buffer(zip, copy, out.size(), 1);
         if (!src) {
