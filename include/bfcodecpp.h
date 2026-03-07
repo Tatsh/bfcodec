@@ -21,7 +21,7 @@ enum class BFCodecError {
  *
  * Use create() to obtain a codec; expandKey(), decrypt(), and encrypt() return std::expected.
  */
-class BFCodec {
+class BFCODEC_API BFCodec {
 public:
     BFCodec() = delete;
 

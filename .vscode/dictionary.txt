@@ -32,10 +32,12 @@ filesubtype
 fileversion
 foxundermoon
 fsafe
+fvisibility
 gmock
 graphviz
 hcrypthash
 hcryptprov
+ifdef
 ifndef
 includedir
 instdir

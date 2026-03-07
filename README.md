@@ -55,6 +55,10 @@ If the directory passed to `-d`/`--extract-to` does not exist it will be created
 ### C interface
 
 ```c
+// If using a DLL on Windows:
+// #ifdef _WIN32
+// #define BFCODEC_USE_DLL 1
+// #endif
 #include <bfcodec.h>
 
 void func() {
@@ -73,6 +77,10 @@ Link with `-lbfcodec`.
 ### C++ interface
 
 ```c++
+// If using a DLL on Windows:
+// #ifdef _WIN32
+// #define BFCODEC_USE_DLL 1
+// #endif
 #include <bfcodecpp.h>
 
 void func() {

@@ -8,6 +8,17 @@ target_include_directories(bfcodec PUBLIC
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+# Hide all symbols by default in the DSO; only BFCODEC_API (see bfcodec_export.h) is exported.
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(bfcodec PRIVATE -fvisibility=hidden)
+endif()
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(bfcodec PRIVATE -fvisibility=hidden)
+endif()
+
+if(BUILD_SHARED_LIBS)
+  target_compile_definitions(bfcodec PRIVATE bfcodec_EXPORTS)
+endif()
 
 if(BFCODEC_APPLY_WARN_ALL)
   target_compile_options(bfcodec PRIVATE
