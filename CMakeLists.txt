@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(bfcodec VERSION 0.0.0 LANGUAGES C CXX)
 
+include(CheckTypeSize)
 include(GNUInstallDirs)
 
 set(CMAKE_C_STANDARD 23)
