@@ -96,6 +96,34 @@ endif()
 find_program(NSIS makensis)
 if(WIN32 AND NSIS)
   set(CPACK_GENERATOR NSIS ZIP)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/extra.nsh.in ${CMAKE_BINARY_DIR}/extra.nsh @ONLY)
+  string(REPLACE "/" "\\\\" CMAKE_BINARY_DIR_ESCAPED ${CMAKE_BINARY_DIR})
+  set(DISPLAY_NAME "BFCodec")
+  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
+      "  !include \\\"${CMAKE_BINARY_DIR_ESCAPED}\\\\extra.nsh\\\"")
+  set(CPACK_NSIS_DEFINES "RequestExecutionLevel user
+!define /date CURRENT_YEAR \\\"%Y\\\"
+VIProductVersion \\\"${PROJECT_VERSION}.0\\\"
+VIAddVersionKey \\\"ProductName\\\" \\\"${DISPLAY_NAME}\\\"
+VIAddVersionKey \\\"CompanyName\\\" \\\"Tatsh\\\"
+VIAddVersionKey \\\"FileDescription\\\" \\\"${DISPLAY_NAME} installer.\\\"
+VIAddVersionKey \\\"FileVersion\\\" \\\"${PROJECT_VERSION}\\\"
+VIAddVersionKey \\\"ProductVersion\\\" \\\"${PROJECT_VERSION}.0\\\"
+VIAddVersionKey \\\"LegalCopyright\\\" \\\"Copyright © \\\${CURRENT_YEAR} Tatsh.\\\"
+VIAddVersionKey \\\"Comments\\\" \\\"${PROJECT_HOMEPAGE_URL}\\\"")
+  set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
+  set(CPACK_NSIS_CONTACT "https://bsky.app/profile/tatsh.bsky.social")
+  # set(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\${CMAKE_PROJECT_NAME}.exe")
+  set(CPACK_PACKAGE_EXECUTABLES "${CMAKE_PROJECT_NAME};${DISPLAY_NAME}")
+  set(CPACK_CREATE_DESKTOP_LINKS "${CMAKE_PROJECT_NAME};${DISPLAY_NAME}")
+  set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
+  set(CPACK_NSIS_DISPLAY_NAME ${DISPLAY_NAME})
+  set(CPACK_NSIS_PACKAGE_NAME ${DISPLAY_NAME})
+  set(CPACK_NSIS_MODIFY_PATH ON) # Necessary to show the 'Create desktop icon' option,
+                                 # unfortunately.
+  set(CPACK_NSIS_URL_INFO_ABOUT ${PROJECT_HOMEPAGE_URL}/issues) # Support link in 'Programs and
+                                                                # Features'.
+  set(CPACK_PACKAGE_INSTALL_DIRECTORY ${DISPLAY_NAME})
 else()
   set(CPACK_GENERATOR ZIP)
 endif()
@@ -108,22 +136,16 @@ if(__cpack_system_name MATCHES "Windows")
   else()
     set(__cpack_system_name win32)
   endif()
+elseif(APPLE)
+  if(CMAKE_APPLE_SILICON_PROCESSOR)
+    set(__cpack_system_name Darwin-arm64)
+  else()
+    set(__cpack_system_name Darwin-x86_64)
+  endif()
 endif()
+set(CPACK_THREADS 0)
 set(CPACK_PACKAGE_FILE_NAME
     ${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${__cpack_system_name}-${CMAKE_BUILD_TYPE})
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR};${CMAKE_MODULE_PATH}")
 set(CPACK_NSIS_MANIFEST_DPI_AWARE ON)
-string(REPLACE / \\\\ CMAKE_INSTALL_PREFIX_BS ${CMAKE_INSTALL_PREFIX})
-# set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS
-#     "File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\jbt.exe
-#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\unjbt.exe
-#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\liblzma*.dll
-#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libplist*.dll
-#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libspdlog*.dll
-#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libstdc*.dll
-#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libzip*.dll
-#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libbz2*.dll
-#   File /nonfatal ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libgcc*.dll
-#   File /nonfatal ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\libwinpthread*.dll
-#   File ${CMAKE_INSTALL_PREFIX_BS}\\\\bin\\\\zlib*.dll")
 include(CPack)

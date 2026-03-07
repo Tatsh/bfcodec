@@ -1,3 +1,4 @@
+
 advapi
 appdir
 appimage
@@ -32,6 +33,7 @@ graphviz
 hcrypthash
 hcryptprov
 includedir
+instdir
 interprocedural
 iwyu
 jbtcommon
@@ -71,6 +73,7 @@ reflec
 reflow
 rhythmin
 schemafile
+shctx
 shellformat
 softprops
 startupinfow
