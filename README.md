@@ -88,7 +88,7 @@ void func() {
   bfc.expandKey({ /* key here */});
   bfc.decrypt(inOutData, {/* IV here */});
   // or
-  bfc.decrypt(inOutData, {/* IV here */})
+  bfc.encrypt(inOutData, {/* IV here */})
 }
 ```
 
