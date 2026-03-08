@@ -171,6 +171,14 @@ jobs:
           subject-path: |
             ${{github.workspace}}/bfcodec-*.exe
             ${{github.workspace}}/bfcodec-*.zip
+      - if: ${{ github.ref_type == 'tag' }}
+        name: Upload package
+        uses: softprops/action-gh-release@v2
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            ${{github.workspace}}/bfcodec-*.exe
+            ${{github.workspace}}/bfcodec-*.zip
     strategy:
       fail-fast: false
       matrix:
