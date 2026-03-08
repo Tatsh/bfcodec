@@ -9,6 +9,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-03-08
+
 ### Added
 
 - Visual C++ (MSVC) build support with vcpkg for dependencies (argparse, libplist, libzip, spdlog).
@@ -61,7 +63,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - First version.
 
-[Unreleased]: https://github.com/Tatsh/bfcodec/compare/v0.0.3...HEAD
+[Unreleased]: https://github.com/Tatsh/bfcodec/compare/v0.0.4...HEAD
+[0.0.4]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.4
 [0.0.3]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.3
 [0.0.2]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.2
 [0.0.1]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.1
