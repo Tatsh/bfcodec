@@ -30,7 +30,7 @@ struct C_BLOWFISH;
 typedef struct C_BLOWFISH C_BLOWFISH;
 
 /**
- * @brief Allocate and initialize a Blowfish codec with pi-derived P and S boxes.
+ * @brief Allocate and initialise a Blowfish codec with pi-derived P and S boxes.
  * @return A new codec instance, or NULL on allocation failure.
  */
 BFCODEC_API C_BLOWFISH *bfcodec_init(void);
