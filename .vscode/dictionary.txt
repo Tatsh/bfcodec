@@ -10,7 +10,9 @@ bfcodecpp
 bindir
 bitness
 bsky
+bswap
 buildsystems
+byteswap
 cgbi
 choco
 commitizen
@@ -22,6 +24,9 @@ ctest
 dbuild
 dcmake
 dcoverage
+declspec
+dllexport
+dllimport
 docstrings
 drwxr
 dwindows
@@ -70,6 +75,7 @@ mainpage
 makensis
 mandir
 mdfile
+memcpy
 msvc
 msystem
 ndebug
