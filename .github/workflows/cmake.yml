@@ -33,6 +33,7 @@ jobs:
         name: Upload package
         uses: softprops/action-gh-release@v2
         with:
+          draft: true
           fail_on_unmatched_files: true
           files: |
             ${{github.workspace}}/bfcodec-*.zip
@@ -103,6 +104,7 @@ jobs:
         name: Upload package
         uses: softprops/action-gh-release@v2
         with:
+          draft: true
           fail_on_unmatched_files: true
           files: |
             ${{github.workspace}}/bfcodec-*.exe
@@ -175,6 +177,7 @@ jobs:
         name: Upload package
         uses: softprops/action-gh-release@v2
         with:
+          draft: true
           fail_on_unmatched_files: true
           files: |
             ${{github.workspace}}/bfcodec-*.exe
@@ -232,6 +235,7 @@ jobs:
       #   name: Upload package
       #   uses: softprops/action-gh-release@v2
       #   with:
+      #     draft: true
       #     fail_on_unmatched_files: true
       #     files: |
       #       ${{github.workspace}}/build/bfcodec-*.AppImage
