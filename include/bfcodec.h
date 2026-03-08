@@ -48,7 +48,7 @@ BFCODEC_API void bfcodec_expand_key(C_BLOWFISH *blf, const uint8_t *key, size_t 
  * @param blf Codec instance with key already expanded.
  * @param data Buffer to decrypt in place.
  * @param len Length of data in bytes; must be a multiple of 8.
- * @param iv Initialization vector; exactly 8 bytes.
+ * @param iv Initialisation vector; exactly 8 bytes.
  */
 BFCODEC_API void bfcodec_decrypt(C_BLOWFISH *blf, uint8_t *data, size_t len, const uint8_t iv[8]);
 
@@ -57,7 +57,7 @@ BFCODEC_API void bfcodec_decrypt(C_BLOWFISH *blf, uint8_t *data, size_t len, con
  * @param blf Codec instance with key already expanded.
  * @param data Buffer to encrypt in place.
  * @param len Length of data in bytes; must be a multiple of 8.
- * @param iv Initialization vector; exactly 8 bytes.
+ * @param iv Initialisation vector; exactly 8 bytes.
  */
 BFCODEC_API void bfcodec_encrypt(C_BLOWFISH *blf, uint8_t *data, size_t len, const uint8_t iv[8]);
 

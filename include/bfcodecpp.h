@@ -56,7 +56,7 @@ public:
     /**
      * @brief Decrypt data in place with CBC.
      * @param data Buffer to decrypt; data.size() must be a multiple of 8.
-     * @param iv Initialization vector; must be exactly 8 bytes.
+     * @param iv Initialisation vector; must be exactly 8 bytes.
      * @return void on success, or std::unexpected(BFCodecError) on failure.
      */
     std::expected<void, BFCodecError> decrypt(std::span<std::byte> data,
@@ -65,7 +65,7 @@ public:
     /**
      * @brief Encrypt data in place with CBC.
      * @param data Buffer to encrypt; data.size() must be a multiple of 8.
-     * @param iv Initialization vector; must be exactly 8 bytes.
+     * @param iv Initialisation vector; must be exactly 8 bytes.
      * @return void on success, or std::unexpected(BFCodecError) on failure.
      */
     std::expected<void, BFCodecError> encrypt(std::span<std::byte> data,
