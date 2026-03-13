@@ -18,7 +18,7 @@ jobs:
           cpack -C ${{matrix.build-type}}
           --config ${{github.workspace}}/build/CPackConfig.cmake --verbose
       - name: 'Upload Artifacts'
-        uses: 'actions/upload-artifact@v6'
+        uses: 'actions/upload-artifact@v7'
         with:
           if-no-files-found: error
           name: bfcodec-${{ matrix.build-type }}-${{ matrix.os }}
@@ -87,7 +87,7 @@ jobs:
           --config ${{steps.fixed_workspace.outputs.out}}/build/CPackConfig.cmake --verbose
         shell: msys2 {0}
       - name: 'Upload Artifacts'
-        uses: 'actions/upload-artifact@v6'
+        uses: 'actions/upload-artifact@v7'
         with:
           if-no-files-found: error
           name: bfcodec-${{ matrix.build-type }}-${{ matrix.sys.name }}
@@ -160,7 +160,7 @@ jobs:
           -D CPACK_PACKAGE_FILE_NAME=bfcodec-${{ steps.version.outputs.version }}-msvc64-${{ matrix.build-type }}
           --config ${{ steps.fixed_workspace.outputs.out }}/build/CPackConfig.cmake --verbose
       - name: 'Upload Artifacts'
-        uses: 'actions/upload-artifact@v6'
+        uses: 'actions/upload-artifact@v7'
         with:
           if-no-files-found: error
           name: bfcodec-${{ matrix.build-type }}-msvc-win64
@@ -220,7 +220,7 @@ jobs:
       #   name: Rename with tag
       #   run: mv -v ${{github.workspace}}/bfcodec-*.AppImage ${{github.workspace}}/bfcodec-${{github.ref_name}}-x86_64.AppImage
       - name: 'Upload Artifacts'
-        uses: 'actions/upload-artifact@v6'
+        uses: 'actions/upload-artifact@v7'
         with:
           if-no-files-found: error
           name: bfcodec-${{ matrix.build-type }}-Linux
