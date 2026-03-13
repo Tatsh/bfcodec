@@ -25,7 +25,7 @@ jobs:
           path: |
             ${{github.workspace}}/bfcodec-*.zip
       - name: Attest
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             ${{github.workspace}}/bfcodec-*.zip
@@ -95,7 +95,7 @@ jobs:
             ${{github.workspace}}/bfcodec-*.exe
             ${{github.workspace}}/bfcodec-*.zip
       - name: Attest
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             ${{github.workspace}}/bfcodec-*.exe
@@ -168,7 +168,7 @@ jobs:
             ${{github.workspace}}/bfcodec-*.exe
             ${{github.workspace}}/bfcodec-*.zip
       - name: Attest
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             ${{github.workspace}}/bfcodec-*.exe
@@ -227,7 +227,7 @@ jobs:
           path: |
             ${{github.workspace}}/bfcodec-*.zip
       - name: Attest
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             ${{github.workspace}}/bfcodec-*.zip
