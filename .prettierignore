@@ -13,7 +13,6 @@
 *.libsonnet
 *.lock
 *.log
-*.mdc
 *.patch
 *.tags
 *~

@@ -10,6 +10,7 @@
   copilot+: {
     intro: 'BFCodec is a set of tools and a C/C++ library to decrypt BFCodec-encrypted content as seen in Android/iOS BEMANI games.',
   },
+  clang_format_args: 'include/*.h src/*.c* tools/*.c* tools/*.h',
   package_json+: {
     cspell+: {
       ignorePaths+: [
@@ -17,11 +18,6 @@
         '.docs/*.tag.xml',
         '.docs/*.tags',
       ],
-    },
-    local clang_format_globs = 'include/*.h src/*.c* tools/*.c* tools/*.h',
-    scripts+: {
-      'check-formatting': 'clang-format -n %s && prettier -c . && markdownlint-cli2' % clang_format_globs,
-      format: 'clang-format -i %s && yarn prettier -w .' % clang_format_globs,
     },
   },
   prettierignore+: ['*.cc', '*.inc', '*.patch', '*.tags'],
