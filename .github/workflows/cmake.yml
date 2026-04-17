@@ -31,7 +31,7 @@ jobs:
             ${{github.workspace}}/bfcodec-*.zip
       - if: ${{ github.ref_type == 'tag' }}
         name: Upload package
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           fail_on_unmatched_files: true
@@ -102,7 +102,7 @@ jobs:
             ${{github.workspace}}/bfcodec-*.zip
       - if: ${{ github.ref_type == 'tag' && matrix.sys.name == 'ucrt64' }}
         name: Upload package
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           fail_on_unmatched_files: true
@@ -175,7 +175,7 @@ jobs:
             ${{github.workspace}}/bfcodec-*.zip
       - if: ${{ github.ref_type == 'tag' }}
         name: Upload package
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           fail_on_unmatched_files: true
@@ -233,7 +233,7 @@ jobs:
             ${{github.workspace}}/bfcodec-*.zip
       # - if: ${{ github.ref_type == 'tag' && matrix.build-type == 'Release' }}
       #   name: Upload package
-      #   uses: softprops/action-gh-release@v2
+      #   uses: softprops/action-gh-release@v3
       #   with:
       #     draft: true
       #     fail_on_unmatched_files: true
