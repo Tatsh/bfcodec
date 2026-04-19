@@ -1,4 +1,5 @@
 advapi
+Ångström
 appdir
 appimage
 argparse
@@ -16,6 +17,7 @@ byteswap
 cgbi
 choco
 commitizen
+cooldown
 corefoundation
 coveragerc
 coverallsapp
@@ -29,8 +31,8 @@ declspec
 dllexport
 dllimport
 docstrings
-dorny
 drwxr
+esac
 esbenp
 exdir
 fileflags
@@ -52,6 +54,7 @@ instdir
 interprocedural
 iwyu
 jbtcommon
+jinja
 jsonnet
 jsonschema
 jubeat
@@ -59,7 +62,6 @@ jubeatskmpledata
 jukebeat
 lbfcodec
 libera
-libjsonnet
 libplist
 libsonnet
 libspdlog
@@ -76,6 +78,7 @@ msvc
 msystem
 mypy
 ndebug
+npmjs
 nsis
 nullptr
 oneline
@@ -85,10 +88,12 @@ pngdefry
 pngfix
 productversion
 prov
+pylock
 reflec
 reflow
 regen
 rhythmin
+ripgreprc
 schemafile
 shctx
 shellcheck
@@ -110,6 +115,7 @@ weverything
 winget
 winpthread
 wiswa
+wiswa's
 xcrun
 yarnrc
 zipcmp
@@ -117,4 +123,3 @@ zipinfo
 zipmerge
 ziptool
 zstd
-ångström

@@ -1,4 +1,5 @@
 {
+  uses_user_defaults: true,
   security_policy_supported_versions: { '0.0.x': ':white_check_mark:' },
   project_name: 'bfcodec',
   version: '0.0.4',
@@ -7,9 +8,6 @@
   want_codeql: false,
   want_main: false,
   want_tests: false,
-  copilot+: {
-    intro: 'BFCodec is a set of tools and a C/C++ library to decrypt BFCodec-encrypted content as seen in Android/iOS BEMANI games.',
-  },
   clang_format_args: 'include/*.h src/*.c* tools/*.c* tools/*.h',
   package_json+: {
     cspell+: {

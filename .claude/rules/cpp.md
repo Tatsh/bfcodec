@@ -1,7 +1,3 @@
----
-applyTo: '**/*.cpp, **/*.h'
----
-
 # C++/Qt guidelines
 
 - No tabs.
@@ -25,6 +21,8 @@ applyTo: '**/*.cpp, **/*.h'
 - Use `nullptr` instead of `NULL`.
 - Feel free to use `auto`. Add qualifiers like `const`, `*`, and `&` as appropriate to improve
   clarity.
+- Use `QString`, `QList`, etc., instead of STL types for Qt APIs unless interoperability is
+  required.
 - Do not use C-style casts; use C++ casts (`static_cast`, `dynamic_cast`, etc.).
 - All new classes must have a corresponding header and source file, and must be added to the
   relevant `CMakeLists.txt`.
@@ -32,7 +30,13 @@ applyTo: '**/*.cpp, **/*.h'
   Qt APIs.
 - Document all public classes and methods using Doxygen-style comments.
 - Private methods and members should have brief comments if their purpose is not obvious.
-- Use `std::span` instead of raw pointers and sizes for array parameters.
+- `QT_NO_CAST_FROM_ASCII` and similar flags are always enabled, so use `QStringLiteral()` where
+  necessary.
+- To convert from `char *` to `QString`, use `QString::fromUtf8()`.
+- Prefer to use `.constData()` instead of `.data()` if both methods are available.
+- `QT_NO_SIGNALS_SLOTS_KEYWORDS` is always enabled, so do not use `signals:` or `slots:` keywords.
+- All public signals should be under the `Q_SIGNALS:` macro.
+- Use `QSpan` or `std::span` instead of raw pointers and sizes for array parameters.
 - Always use curly braces/brackets for logic control statements (`if`, `while`, `for`) even if there
   is only 1 statement.
 - Left curly braces/brackets go on the same line as the start of the statement.
