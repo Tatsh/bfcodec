@@ -12,6 +12,7 @@
 *.libsonnet
 *.lock
 *.log
+*.min.js
 *.patch
 *.tags
 *~

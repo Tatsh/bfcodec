@@ -6,7 +6,6 @@
 [![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/bfcodec)](https://github.com/Tatsh/bfcodec/tags)
 [![License](https://img.shields.io/github/license/Tatsh/bfcodec)](https://github.com/Tatsh/bfcodec/blob/master/LICENSE.txt)
 [![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/bfcodec/v0.0.4/master)](https://github.com/Tatsh/bfcodec/compare/v0.0.4...master)
-[![QA](https://github.com/Tatsh/bfcodec/actions/workflows/qa.yml/badge.svg)](https://github.com/Tatsh/bfcodec/actions/workflows/qa.yml)
 [![Dependabot](https://img.shields.io/badge/Dependabot-enabled-blue?logo=dependabot)](https://github.com/dependabot)
 [![GitHub Pages](https://github.com/Tatsh/bfcodec/actions/workflows/pages.yml/badge.svg)](https://tatsh.github.io/bfcodec/)
 [![Stargazers](https://img.shields.io/github/stars/Tatsh/bfcodec?logo=github&style=flat)](https://github.com/Tatsh/bfcodec/stargazers)
