@@ -9,6 +9,30 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-05-04
+
+### Added
+
+- AppImage release artefact for `jbt` on Linux x86_64 and aarch64.
+- Snap package providing `jbt` (`bfcodec` snap, amd64 and arm64).
+- Flatpak bundle (`sh.tat.bfcodec`) running `jbt`, built on the Freedesktop 24.08 runtime, for
+  x86_64 and aarch64.
+- MSVC ARM64 build, published alongside the existing MSVC x64 build on tag pushes.
+- MSYS2 `clangarm64` build, published on tag pushes.
+- ARM64 (`aarch64`) Linux build, published alongside the existing x86_64 Linux build.
+- Automated downstream packaging on tag pushes: pull request to `gentoo/gentoo` for
+  `dev-libs/bfcodec`, pull request to `msys2/MINGW-packages` for `mingw-w64-bfcodec`, and a WinGet
+  manifest update for `Tatsh.bfcodec`.
+
+### Changed
+
+- Windows MSVC release archives are now named `bfcodec-{version}-msvc-{x64|arm64}-{BuildType}`
+  (previously `msvc64`).
+- CPack package file names include the architecture so release artefacts no longer collide across
+  the build matrix (`Linux-x86_64`, `Linux-aarch64`, `Darwin-{arm64|x86_64}`, `mingw64`, `ucrt64`,
+  `clangarm64`, `msvc-{x64|arm64}`).
+- Lowered the minimum required CMake version from 3.31 to 3.28.
+
 ## [0.0.4] - 2026-03-08
 
 ### Added
@@ -63,7 +87,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - First version.
 
-[Unreleased]: https://github.com/Tatsh/bfcodec/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/Tatsh/bfcodec/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.5
 [0.0.4]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.4
 [0.0.3]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.3
 [0.0.2]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.2

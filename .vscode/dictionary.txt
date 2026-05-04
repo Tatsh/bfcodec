@@ -83,6 +83,7 @@ mdfile
 memcpy
 mktemp
 msvc
+msys
 msystem
 mypy
 ndebug
