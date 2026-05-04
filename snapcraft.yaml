@@ -26,6 +26,7 @@ parts:
       - 'libspdlog-dev'
       - 'libssl-dev'
       - 'libzip-dev'
+      - 'pkgconf'
     cmake-parameters:
       - '-DCMAKE_BUILD_TYPE=Release'
       - '-DCMAKE_INSTALL_PREFIX=/usr'
