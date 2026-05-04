@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(
   bfcodec
-  VERSION 0.0.5
+  VERSION 0.0.4
   LANGUAGES C CXX
   DESCRIPTION "Tools and a C/C++ library to manipulate BFCodec-encrypted content"
   HOMEPAGE_URL "https://github.com/Tatsh/bfcodec")
