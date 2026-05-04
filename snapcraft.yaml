@@ -31,7 +31,7 @@ parts:
     plugin: 'cmake'
     source: '.'
     stage-packages:
-      - 'libplist-2.0-3'
+      - 'libplist-2.0-4'
       - 'libspdlog1.12'
       - 'libssl3t64'
       - 'libzip4t64'
