@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="32" fill="#1f2933" />
+  <rect x="40" y="80" width="176" height="136" rx="12" fill="#3b82f6" />
+  <rect x="40" y="80" width="176" height="40" rx="12" fill="#1d4ed8" />
+  <text
+    x="128"
+    y="180"
+    font-family="monospace"
+    font-size="64"
+    font-weight="700"
+    fill="#f8fafc"
+    text-anchor="middle"
+  >jbt</text>
+</svg>

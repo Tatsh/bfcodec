@@ -2,6 +2,7 @@
 *.c
 *.cc
 *.cpp
+*.desktop
 *.h
 *.in
 *.inc

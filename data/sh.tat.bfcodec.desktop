@@ -1,0 +1,10 @@
+[Desktop Entry]
+Categories=Utility;Archiving;
+Comment=Encrypt and pack BFCodec game data
+Exec=jbt %F
+GenericName=BFCodec packer
+Icon=sh.tat.bfcodec
+Name=jbt
+NoDisplay=true
+Terminal=true
+Type=Application

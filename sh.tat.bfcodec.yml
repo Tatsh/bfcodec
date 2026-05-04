@@ -1,0 +1,65 @@
+---
+id: sh.tat.bfcodec
+runtime: org.freedesktop.Platform
+runtime-version: '24.08'
+sdk: org.freedesktop.Sdk
+command: jbt
+finish-args:
+  - --filesystem=home
+  - --filesystem=/run/media
+  - --filesystem=/media
+cleanup:
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
+  - /share/aclocal
+  - /share/doc
+  - /share/man
+  - /share/pkgconfig
+  - '*.a'
+  - '*.la'
+modules:
+  - name: libplist
+    buildsystem: autotools
+    config-opts:
+      - --without-cython
+      - --disable-static
+    sources:
+      - type: git
+        url: https://github.com/libimobiledevice/libplist.git
+        tag: '2.7.0'
+  - name: libzip
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DBUILD_DOC=OFF
+      - -DBUILD_EXAMPLES=OFF
+      - -DBUILD_REGRESS=OFF
+      - -DBUILD_TOOLS=OFF
+    sources:
+      - type: git
+        url: https://github.com/nih-at/libzip.git
+        tag: 'v1.11.4'
+  - name: spdlog
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DSPDLOG_BUILD_SHARED=ON
+      - -DSPDLOG_BUILD_EXAMPLE=OFF
+      - -DSPDLOG_BUILD_TESTS=OFF
+    sources:
+      - type: git
+        url: https://github.com/gabime/spdlog.git
+        tag: 'v1.15.3'
+  - name: bfcodec
+    builddir: true
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    sources:
+      - type: git
+        url: https://github.com/Tatsh/bfcodec.git
+        tag: v0.0.4
+        x-checker-data:
+          type: git
+          tag-pattern: '^v([\d.]+)$'

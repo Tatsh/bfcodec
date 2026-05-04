@@ -1,0 +1,47 @@
+apps:
+  jbt:
+    command: 'usr/bin/jbt'
+    common-id: 'sh.tat.bfcodec'
+    plugs:
+      - 'home'
+      - 'removable-media'
+base: 'core24'
+confinement: 'strict'
+contact: 'https://github.com/Tatsh/bfcodec/issues'
+description: |
+  bfcodec provides tools and a C/C++ library to manipulate BFCodec-encrypted
+  content. The jbt tool encrypts a directory of game data then zips it up.
+donation: 'https://buymeacoffee.com/Tatsh'
+grade: 'stable'
+issues: 'https://github.com/Tatsh/bfcodec/issues'
+license: 'MIT'
+name: 'bfcodec'
+parts:
+  bfcodec:
+    build-environment:
+      - LDFLAGS: '-Wl,--allow-shlib-undefined'
+    build-packages:
+      - 'libplist-dev'
+      - 'libspdlog-dev'
+      - 'libssl-dev'
+      - 'libzip-dev'
+    cmake-parameters:
+      - '-DCMAKE_BUILD_TYPE=Release'
+      - '-DCMAKE_INSTALL_PREFIX=/usr'
+    plugin: 'cmake'
+    source: '.'
+    stage-packages:
+      - 'libplist-2.0-3'
+      - 'libspdlog1.12'
+      - 'libssl3t64'
+      - 'libzip4t64'
+platforms:
+  amd64:
+    build-on: 'amd64'
+  arm64:
+    build-on: 'arm64'
+source-code: 'https://github.com/Tatsh/bfcodec'
+summary: 'Tools to manipulate BFCodec-encrypted content'
+title: 'bfcodec'
+version: '0.0.4'
+website: 'https://github.com/Tatsh/bfcodec'
