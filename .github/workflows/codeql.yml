@@ -17,17 +17,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libplist-dev libspdlog-dev libssl-dev libzip-dev
+          sudo apt-get install -y libplist-dev libspdlog-dev libssl-dev libzip-dev zipcmp zipmerge ziptool
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-      - name: Configure
-        run: >-
-          cmake -DCMAKE_BUILD_TYPE=Release -B ${{github.workspace}}/build
-          --install-prefix ${{github.workspace}}/build/prefix
-      - name: Build
-        run: cmake --build ${{github.workspace}}/build --verbose --config Release
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
