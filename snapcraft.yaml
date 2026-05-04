@@ -27,6 +27,9 @@ parts:
       - 'libssl-dev'
       - 'libzip-dev'
       - 'pkgconf'
+      - 'zipcmp'
+      - 'zipmerge'
+      - 'ziptool'
     cmake-parameters:
       - '-DCMAKE_BUILD_TYPE=Release'
       - '-DCMAKE_INSTALL_PREFIX=/usr'
