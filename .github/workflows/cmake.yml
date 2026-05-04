@@ -24,13 +24,11 @@ jobs:
           name: bfcodec-${{ matrix.build-type }}-${{ matrix.os }}
           path: |
             ${{github.workspace}}/bfcodec-*.zip
-            ${{github.workspace}}/bfcodec-*.dmg
       - name: Attest
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             ${{github.workspace}}/bfcodec-*.zip
-            ${{github.workspace}}/bfcodec-*.dmg
       - if: ${{ github.ref_type == 'tag' }}
         name: Upload package
         uses: softprops/action-gh-release@v3
@@ -39,7 +37,6 @@ jobs:
           fail_on_unmatched_files: true
           files: |
             ${{github.workspace}}/bfcodec-*.zip
-            ${{github.workspace}}/bfcodec-*.dmg
     strategy:
       fail-fast: false
       matrix:
