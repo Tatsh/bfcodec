@@ -21,6 +21,7 @@ parts:
     build-environment:
       - LDFLAGS: '-Wl,--allow-shlib-undefined'
     build-packages:
+      - 'git'
       - 'libplist-dev'
       - 'libspdlog-dev'
       - 'libssl-dev'
