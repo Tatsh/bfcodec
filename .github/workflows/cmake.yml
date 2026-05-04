@@ -140,7 +140,7 @@ jobs:
             release: true
             runner: windows-11-arm
   build-msvc:
-    runs-on: ${{matrix.sys.os}}
+    runs-on: ${{ matrix.sys.runner }}
     steps:
       - id: fixed_workspace
         name: Fix path
@@ -151,37 +151,30 @@ jobs:
         with:
           fetch-depth: 0
       - name: Clone vcpkg
-        run: git clone https://github.com/microsoft/vcpkg.git ${{ steps.fixed_workspace.outputs.out }}/vcpkg
+        run: git clone https://github.com/microsoft/vcpkg.git ${{steps.fixed_workspace.outputs.out}}/vcpkg
       - name: Bootstrap vcpkg
-        run: ${{ steps.fixed_workspace.outputs.out }}/vcpkg/bootstrap-vcpkg.bat
+        run: ${{steps.fixed_workspace.outputs.out}}/vcpkg/bootstrap-vcpkg.bat
       - name: Install NSIS
-        run: choco install nsis -y
+        run: choco install nsis -y --no-progress
       - name: Configure
         run: >-
-          cmake -G "Visual Studio 17 2022" -A x64
-          -B ${{ steps.fixed_workspace.outputs.out }}/build
-          -DCMAKE_TOOLCHAIN_FILE=${{ steps.fixed_workspace.outputs.out }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-          --install-prefix ${{ steps.fixed_workspace.outputs.out }}/build/prefix
+          cmake -G "Visual Studio 17 2022" -A ${{matrix.sys.cmake_arch}}
+          -B ${{steps.fixed_workspace.outputs.out}}/build
+          -DCMAKE_TOOLCHAIN_FILE=${{steps.fixed_workspace.outputs.out}}/vcpkg/scripts/buildsystems/vcpkg.cmake
+          --install-prefix ${{steps.fixed_workspace.outputs.out}}/build/prefix
+          -DCPACK_SYSTEM_NAME=msvc-${{matrix.sys.arch}}
       - name: Build
-        run: cmake --build ${{ steps.fixed_workspace.outputs.out }}/build --config ${{ matrix.build-type }} --verbose
+        run: cmake --build ${{steps.fixed_workspace.outputs.out}}/build --config ${{matrix.build-type}} --verbose
       - name: Install
         run: >-
-          cmake --install ${{ steps.fixed_workspace.outputs.out }}/build
-          --config ${{ matrix.build-type }} --verbose
-      - name: Get project version
-        id: version
-        run: |
-          $content = Get-Content "${{ steps.fixed_workspace.outputs.out }}/CMakeLists.txt" -Raw
-          $m = [regex]::Match($content, 'project\s*\([^)]*VERSION\s+([\d.]+)')
-          $version = if ($m.Success) { $m.Groups[1].Value } else { '0.0.0' }
-          echo "version=$version" >> $env:GITHUB_OUTPUT
+          cmake --install ${{steps.fixed_workspace.outputs.out}}/build
+          --config ${{matrix.build-type}} --verbose
       - name: Package
         run: >-
-          cpack -C ${{ matrix.build-type }}
-          -D CPACK_PACKAGE_FILE_NAME=bfcodec-${{ steps.version.outputs.version }}-${{ matrix.build-type }}-${{ matrix.sys.arch }}
-          --config ${{ steps.fixed_workspace.outputs.out }}/build/CPackConfig.cmake --verbose
+          cpack -C ${{matrix.build-type}}
+          --config ${{steps.fixed_workspace.outputs.out}}/build/CPackConfig.cmake --verbose
       - name: 'Upload Artifacts'
-        uses: 'actions/upload-artifact@v6'
+        uses: 'actions/upload-artifact@v7'
         with:
           if-no-files-found: error
           name: bfcodec-${{ matrix.build-type }}-msvc-${{ matrix.sys.arch }}
@@ -189,9 +182,18 @@ jobs:
             ${{github.workspace}}/bfcodec-*.exe
             ${{github.workspace}}/bfcodec-*.zip
       - name: Attest
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
+            ${{github.workspace}}/bfcodec-*.exe
+            ${{github.workspace}}/bfcodec-*.zip
+      - if: ${{ github.ref_type == 'tag' }}
+        name: Upload package
+        uses: softprops/action-gh-release@v3
+        with:
+          draft: true
+          fail_on_unmatched_files: true
+          files: |
             ${{github.workspace}}/bfcodec-*.exe
             ${{github.workspace}}/bfcodec-*.zip
     strategy:
@@ -199,10 +201,12 @@ jobs:
       matrix:
         build-type: [Debug, Release]
         sys:
-          - arch: amd64
-            os: windows-latest
+          - arch: x64
+            cmake_arch: x64
+            runner: windows-latest
           - arch: arm64
-            os: windows-11-arm
+            cmake_arch: ARM64
+            runner: windows-11-arm
   build-linux:
     runs-on: ${{ matrix.arch.runner }}
     steps:
