@@ -4,6 +4,12 @@
   project_name: 'bfcodec',
   version: '0.0.4',
   description: 'Tools and a C/C++ library to manipulate BFCodec-encrypted content.',
+  social+: {
+    custom_badges: [
+      '[![Tests](https://github.com/Tatsh/bfcodec/actions/workflows/tests.yml/badge.svg)](https://github.com/Tatsh/bfcodec/actions/workflows/tests.yml)',
+      '[![Coverage Status](https://coveralls.io/repos/github/Tatsh/bfcodec/badge.svg?branch=master)](https://coveralls.io/github/Tatsh/bfcodec?branch=master)',
+    ],
+  },
   keywords: ['android', 'ios', 'konami', 'jubeat', 'jukebeat', 'reflec beat'],
   want_codeql: false,
   want_main: false,
