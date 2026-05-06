@@ -9,6 +9,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-05-05
+
 ### Added
 
 - AppImage release artefact for `jbt` on Linux x86_64 and aarch64.
@@ -86,6 +88,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - First version.
 
 [Unreleased]: https://github.com/Tatsh/bfcodec/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.5
 [0.0.4]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.4
 [0.0.3]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.3
 [0.0.2]: https://github.com/Tatsh/bfcodec/releases/tag/v0.0.2
