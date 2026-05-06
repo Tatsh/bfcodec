@@ -104,30 +104,37 @@ install(TARGETS unjbt jbt
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   RUNTIME_DEPENDENCY_SET jbt
 )
-if(NOT LINUX)
-  if(MINGW)
-    get_filename_component(_mingw_bin_dir ${CMAKE_C_COMPILER} DIRECTORY)
-    set(_mingw_lib_dir ${_mingw_bin_dir})
+if(WIN32)
+  get_filename_component(_compiler_bin_dir ${CMAKE_C_COMPILER} DIRECTORY)
+  install(
+    RUNTIME_DEPENDENCY_SET
+    jbt
+    PRE_EXCLUDE_REGEXES
+    [=[api-ms-]=]
+    [=[ext-ms-]=]
+    [[kernel32\.dll]]
+    POST_EXCLUDE_REGEXES
+    [=[.*system32\/.*\.dll]=]
+    DIRECTORIES
+    ${CMAKE_INSTALL_PREFIX}/bin
+    ${_compiler_bin_dir}
+    $<TARGET_FILE_DIR:jbt>)
+elseif(APPLE)
+  if(EXISTS "/opt/local/lib")
+    set(_macports_dir "/opt/local/lib")
   endif()
-  if(APPLE)
-    if(EXISTS "/opt/local/lib")
-      set(_macports_dir "/opt/local/lib")
-    endif()
-    if (EXISTS "/opt/homebrew/lib")
-      set(_homebrew_dir "/opt/homebrew/lib")
-    endif()
+  if(EXISTS "/opt/homebrew/lib")
+    set(_homebrew_dir "/opt/homebrew/lib")
   endif()
-  message(STATUS "Directories: ${CMAKE_INSTALL_PREFIX}/lib ${_mingw_lib_dir}")
   install(
     RUNTIME_DEPENDENCY_SET
     jbt
     PRE_EXCLUDE_REGEXES
     "."
     PRE_INCLUDE_REGEXES
-    "gcc|stdc|spdlog|plist|zip|zlib|winpthread|zstd|lzma|bz2"
+    "spdlog|plist|zip|zlib|zstd|lzma|bz2"
     DIRECTORIES
     ${CMAKE_INSTALL_PREFIX}/bin
-    ${_mingw_bin_dir}
     ${_macports_dir}
     ${_homebrew_dir})
 endif()
