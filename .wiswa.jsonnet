@@ -30,6 +30,8 @@
       version_files+: [
         'man/jbt.1',
         'man/unjbt.1',
+        'sh.tat.bfcodec.yml',
+        'snapcraft.yaml',
       ],
     },
   },

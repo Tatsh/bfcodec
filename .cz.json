@@ -9,6 +9,8 @@
       "CMakeLists.txt",
       "README.md",
       "package.json",
+      "sh.tat.bfcodec.yml",
+      "snapcraft.yaml",
       "vcpkg.json",
       "man/jbt.1",
       "man/unjbt.1"
