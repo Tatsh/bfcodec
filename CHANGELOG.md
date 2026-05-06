@@ -9,6 +9,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- MSVC release archives no longer have an empty build-type segment in their file names (e.g.
+  `bfcodec-{version}-msvc-{x64|arm64}-{Release|Debug}` instead of
+  `bfcodec-{version}-msvc-{x64|arm64}-`). Multi-config generators (Visual Studio) now defer the
+  build-type portion of `CPACK_PACKAGE_FILE_NAME` to cpack-run time via `CPACK_BUILD_CONFIG`.
+
 ## [0.0.5] - 2026-05-05
 
 ### Added
