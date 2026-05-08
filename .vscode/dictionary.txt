@@ -1,5 +1,6 @@
 aclocal
 advapi
+Ångström
 appdir
 appimage
 argparse
@@ -92,13 +93,10 @@ nsis
 nullptr
 oneline
 pacboy
-pkgbuild
-pkgcheck
-pkgrel
-pkgver
 pngcrush
 pngdefry
 pngfix
+preapproved
 productversion
 prov
 pylock
@@ -117,7 +115,6 @@ snapcore
 snapcraft
 softprops
 startupinfow
-stdc
 strequal
 tatsh
 tostring
@@ -131,7 +128,6 @@ versioninfo
 weverything
 winarm
 winget
-winpthread
 wiswa
 wiswa's
 xcrun
@@ -141,4 +137,3 @@ zipinfo
 zipmerge
 ziptool
 zstd
-Ångström
