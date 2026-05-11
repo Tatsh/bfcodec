@@ -2,7 +2,7 @@
   uses_user_defaults: true,
   security_policy_supported_versions: { '0.0.x': ':white_check_mark:' },
   project_name: 'bfcodec',
-  version: '0.0.5',
+  version: '0.0.6',
   description: 'Tools and a C/C++ library to manipulate BFCodec-encrypted content.',
   social+: {
     custom_badges: [

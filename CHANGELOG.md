@@ -9,6 +9,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-05-10
+
+### Changed
+
+- Flatpak (`sh.tat.bfcodec.yml`) and Snap (`snapcraft.yaml`) manifests are now pinned to the
+  released git tag and tracked in `cz` version files, so each release builds reproducibly from
+  the matching upstream tag.
+- Bumped the vcpkg baseline to `2026.04.27`.
+- Man pages (`jbt.1`, `unjbt.1`) now record the project version in `.Os` and are tracked in `cz`
+  version files.
+
 ### Fixed
 
 - MSVC release archives no longer have an empty build-type segment in their file names (e.g.

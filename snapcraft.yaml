@@ -35,7 +35,7 @@ parts:
       - '-DCMAKE_INSTALL_PREFIX=/usr'
     plugin: 'cmake'
     source: 'https://github.com/Tatsh/bfcodec.git'
-    source-tag: 'v0.0.5'
+    source-tag: 'v0.0.6'
     source-type: 'git'
     stage-packages:
       - 'libplist-2.0-4'
@@ -50,5 +50,5 @@ platforms:
 source-code: 'https://github.com/Tatsh/bfcodec'
 summary: 'Tools to manipulate BFCodec-encrypted content'
 title: 'bfcodec'
-version: '0.0.5'
+version: '0.0.6'
 website: 'https://github.com/Tatsh/bfcodec'

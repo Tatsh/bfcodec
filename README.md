@@ -5,7 +5,7 @@
 [![C++](https://img.shields.io/badge/C++-00599C?logo=c%2B%2B)](https://isocpp.org)
 [![GitHub tag (with filter)](https://img.shields.io/github/v/tag/Tatsh/bfcodec)](https://github.com/Tatsh/bfcodec/tags)
 [![License](https://img.shields.io/github/license/Tatsh/bfcodec)](https://github.com/Tatsh/bfcodec/blob/master/LICENSE.txt)
-[![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/bfcodec/v0.0.5/master)](https://github.com/Tatsh/bfcodec/compare/v0.0.5...master)
+[![GitHub commits since latest release (by SemVer including pre-releases)](https://img.shields.io/github/commits-since/Tatsh/bfcodec/v0.0.6/master)](https://github.com/Tatsh/bfcodec/compare/v0.0.6...master)
 [![Dependabot](https://img.shields.io/badge/Dependabot-enabled-blue?logo=dependabot)](https://github.com/dependabot)
 [![GitHub Pages](https://github.com/Tatsh/bfcodec/actions/workflows/pages.yml/badge.svg)](https://tatsh.github.io/bfcodec/)
 [![Stargazers](https://img.shields.io/github/stars/Tatsh/bfcodec?logo=github&style=flat)](https://github.com/Tatsh/bfcodec/stargazers)
