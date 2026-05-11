@@ -88,7 +88,6 @@ msys
 msystem
 mypy
 ndebug
-npmjs
 nsis
 nullptr
 oneline
@@ -100,6 +99,7 @@ preapproved
 productversion
 prov
 pylock
+pyproject
 rect
 reflec
 reflow
@@ -120,6 +120,8 @@ tatsh
 tostring
 ucrt
 udvare
+undraft
+undrafted
 unjbt
 vedantmgoyal
 vendored
@@ -130,6 +132,7 @@ winarm
 winget
 wiswa
 wiswa's
+worktree
 xcrun
 yarnrc
 zipcmp
