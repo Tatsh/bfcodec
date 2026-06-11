@@ -89,11 +89,11 @@ final ``{"kind": "summary", ...}`` that reports whether every byte was consumed.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import argparse
 import json
 import struct
 import sys
-from dataclasses import dataclass
 
 HEADER_SIZE = 0x2C
 MAGIC = b'RBFF'

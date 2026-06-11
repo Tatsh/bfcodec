@@ -23,6 +23,8 @@ The encrypted ``mulist`` lands in ``Documents`` and each song package lands in
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from pathlib import Path
 import argparse
 import logging
 import re
@@ -30,8 +32,6 @@ import shlex
 import shutil
 import subprocess
 import sys
-from collections.abc import Sequence
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
