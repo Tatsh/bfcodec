@@ -105,14 +105,14 @@ EVENT_SIZE = 0x24
 # field_0x20, and the 0x08 count equals the number of records carrying the 12-byte tail). Bits
 # never seen set on disk (0x02/0x40/0x80) and 0x01 (whose role is not pinned down) keep raw names.
 FLAG_FIELDS = (
-    (0x01, 'reflect'),                    # reflect note (bounces back to the opponent); inferred
-    (0x02, 'flag_0x02'),                  # never set in the shipped charts
+    (0x01, 'reflect'),  # reflect note (bounces back to the opponent); inferred
+    (0x02, 'flag_0x02'),  # never set in the shipped charts
     (0x04, 'excluded_from_score_count'),  # not tallied as a scoreable object by the engine
-    (0x08, 'chain'),                      # chain-run member; carries the prev/next link block
-    (0x10, 'green'),                      # green-target note; set-bit count == header field_0x20
-    (0x20, 'side_object_counted'),        # incremented into the per-side object counter
-    (0x40, 'runtime_overlap'),            # engine-set at load time, never present on disk
-    (0x80, 'flag_0x80'),                  # never set in the shipped charts
+    (0x08, 'chain'),  # chain-run member; carries the prev/next link block
+    (0x10, 'green'),  # green-target note; set-bit count == header field_0x20
+    (0x20, 'side_object_counted'),  # incremented into the per-side object counter
+    (0x40, 'runtime_overlap'),  # engine-set at load time, never present on disk
+    (0x80, 'flag_0x80')  # never set in the shipped charts
 )
 
 FLAG_REFLECT = 0x01
@@ -167,17 +167,8 @@ class Cursor:
 def parse_header(data: bytes) -> dict:
     if data[:4] != MAGIC:
         raise ValueError(f'Not an RBFF file (magic is {data[:4]!r}).')
-    (
-        version,
-        reserved0,
-        reserved1,
-        bpm_bits,
-        field0x14,
-        field0x18,
-        note_count,
-        event_count,
-        field0x20,
-    ) = struct.unpack_from('<IIIIIIHHH', data, 4)
+    (version, reserved0, reserved1, bpm_bits, field0x14, field0x18, note_count, event_count,
+     field0x20) = struct.unpack_from('<IIIIIIHHH', data, 4)
     return {
         'kind': 'header',
         'magic': MAGIC.decode('ascii'),
@@ -189,7 +180,7 @@ def parse_header(data: bytes) -> dict:
         'field_0x18': field0x18,
         'note_count': note_count,
         'event_count': event_count,
-        'field_0x20': field0x20,
+        'field_0x20': field0x20
     }
 
 
@@ -217,7 +208,7 @@ def parse_note(cursor: Cursor, ordinal: int) -> dict:
             'field2': chain[2],
             'field3': chain[3],
             'field4': chain[4],
-            'field5': chain[5],
+            'field5': chain[5]
         }
     return {
         'kind': 'note',
@@ -232,17 +223,35 @@ def parse_note(cursor: Cursor, ordinal: int) -> dict:
         'link': None if link == 0xFFFF else link,
         'path_count': path_count,
         'path_points': path_points,
-        'efgh': {'e': e, 'f': f, 'g': g, 'h': h},
-        'params': {'param0': p0, 'param1': p1, 'param2': p2, 'param3': p3},
+        'efgh': {
+            'e': e,
+            'f': f,
+            'g': g,
+            'h': h
+        },
+        'params': {
+            'param0': p0,
+            'param1': p1,
+            'param2': p2,
+            'param3': p3
+        },
         'flags': flags,
         'flags_hex': f'0x{flags:08x}',
-        'flags_decoded': {name: bool(flags & bit) for bit, name in FLAG_FIELDS},
+        'flags_decoded': {
+            name: bool(flags & bit)
+            for bit, name in FLAG_FIELDS
+        },
         'has_extra': bool(flags & FLAG_HAS_EXTRA),
         # m/o/p/q are read from the on-disk record but the v11 installer (InstallParsedNotes)
         # never copies them into the runtime note; they are 0 across every shipped chart. Kept
         # here for fidelity to the byte layout. They are likely consumed by another format version.
-        'reserved_tail': {'m': m, 'o': o, 'p': p, 'q': q},
-        'extra': extra,
+        'reserved_tail': {
+            'm': m,
+            'o': o,
+            'p': p,
+            'q': q
+        },
+        'extra': extra
     }
 
 
@@ -255,7 +264,7 @@ def parse_event(cursor: Cursor, ordinal: int) -> dict:
         'ordinal': ordinal,
         'file_offset': start,
         'type': event_type,
-        'payload_hex': bytes(payload).hex(),
+        'payload_hex': bytes(payload).hex()
     }
 
 
@@ -275,7 +284,7 @@ def parse_file(path: str):
         'file_size': len(data),
         'bytes_consumed': cursor.offset,
         'fully_consumed': cursor.offset == len(data),
-        'trailing_bytes': len(data) - cursor.offset,
+        'trailing_bytes': len(data) - cursor.offset
     }
 
 
