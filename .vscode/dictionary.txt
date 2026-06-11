@@ -7,6 +7,7 @@ argparse
 autobuild
 autoinstall
 autotools
+beatplus
 bemani
 bfcodec
 bfcodecpp
@@ -55,13 +56,17 @@ flathub
 foxundermoon
 frida
 fsafe
+functiongraph
 fvisibility
 ghidra
 gmock
+gotoquery
 graphviz
 hcrypthash
 hcryptprov
 hira
+iadd
+idset
 ifdef
 ifndef
 iiiiiihhh
@@ -76,6 +81,7 @@ jsonschema
 jubeat
 jubeatskmpledata
 jukebeat
+jython
 lbfcodec
 ldflags
 libcommon
@@ -97,6 +103,7 @@ msys
 msystem
 mulist
 mypy
+navigatable
 ndebug
 nsis
 nullptr
@@ -106,10 +113,12 @@ pacboy
 pngcrush
 pngdefry
 pngfix
+popups
 preapproved
 prodlist
 productversion
 prov
+publickey
 pylock
 pyproject
 rbff
@@ -144,6 +153,7 @@ vedantmgoyal
 vendored
 venv
 versioninfo
+viewname
 weverything
 winarm
 winget
