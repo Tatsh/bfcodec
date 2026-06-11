@@ -1,0 +1,96 @@
+.\" Copyright (c) 2026 bfcodec authors. License: MIT.
+.Dd June 2026
+.Dt BFC 1
+.Os bfcodec 0.0.6
+.Sh NAME
+.Nm bfc
+.Nd encrypt a file in place with BFCodec
+.Sh SYNOPSIS
+.Nm
+.Op Fl V
+.Nm
+.Op Fl K Ar key | Fl -key Ar key | Fl -key-file Ar path | Fl -uuid Ar uuid
+.Op Fl -iv Ar iv | Fl -iv-file Ar path
+.Op Fl -backup
+.Op Fl o Ar path
+.Ar file
+.Sh DESCRIPTION
+.Nm
+encrypts
+.Ar file
+with the BFCodec cipher (Blowfish-derived, CBC), overwriting
+.Ar file
+with the result, or writing to the path given by
+.Fl o
+if present.
+The encrypted data is followed by an 8-byte trailer holding the original size
+and the encrypted block size, so
+.Xr unbfc 1
+can recover the exact original contents.
+.Pp
+If no key is given, a default passphrase is used; if no IV is given, a default
+IV is used.
+The key can be given as a passphrase
+.Pq Fl K Ns / Ns Fl -key ,
+which is MD5-hashed to 16 bytes, as a raw binary file
+.Pq Fl -key-file ,
+or as a device UUID
+.Pq Fl -uuid ,
+whose canonical uppercase form is MD5-hashed to 16 bytes.
+The IV can be given as hex
+.Pq Fl -iv ;
+spaces are ignored.
+The IV in hex is 16 hex digits (8 bytes).
+.Sh OPTIONS
+.Bl -tag -width Ds
+.It Fl V
+Print version and exit.
+.It Fl K , Fl -key Ar key
+Passphrase, MD5-hashed to 16 bytes for the key.
+Default is the passphrase for jubeat Plus.
+Mutually exclusive with
+.Fl -key-file .
+.It Fl -key-file Ar path
+Read the key from the binary file
+.Ar path
+(first 16 bytes used; file may be longer).
+Overrides the default passphrase.
+Mutually exclusive with
+.Fl -key .
+.It Fl -uuid Ar uuid
+Device UUID; its canonical uppercase
+.Sq 8-4-4-4-12
+form is MD5-hashed to 16 bytes for the key.
+Dashes and letter case are optional.
+Mutually exclusive with
+.Fl K , Fl -key , and Fl -key-file .
+.It Fl -iv Ar iv
+IV as 16 hex digits (8 bytes); spaces ignored.
+Mutually exclusive with
+.Fl -iv-file .
+A default IV is used if neither
+.Fl -iv
+nor
+.Fl -iv-file
+is given.
+.It Fl -iv-file Ar path
+Read the IV from the binary file
+.Ar path
+(first 8 bytes used; file may be longer).
+Mutually exclusive with
+.Fl -iv .
+.It Fl -backup
+Back up the destination to
+.Ar dest Ns .bak
+before overwriting it, if the destination already exists.
+.It Fl o , Fl -output Ar path
+Write the output to
+.Ar path
+instead of overwriting the input.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Sh SEE ALSO
+.Xr unbfc 1 ,
+.Xr jbt 1 ,
+.Xr unjbt 1

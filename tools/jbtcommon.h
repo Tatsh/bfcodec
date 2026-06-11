@@ -53,7 +53,7 @@ namespace Tools {
 namespace fs = std::filesystem;
 
 enum class ParseError { InvalidHexChar, OddHexDigits };
-enum class FileError { CannotOpen, WriteFailed, WrongSize };
+enum class FileError { BackupFailed, CannotOpen, WriteFailed, WrongSize };
 enum class KeyIvError {
     IvAndIvFileBoth,
     IvParseFailed,
@@ -64,6 +64,8 @@ enum class KeyIvError {
     KeyMd5Failed,
     KeyReadFailed,
     KeyRequired,
+    KeyUuidBoth,
+    UuidInvalid,
 };
 enum class PlistError {
     CFDataCreateFailed,
@@ -96,6 +98,14 @@ struct KeyIv {
 
 int fromHexChar(char c);
 
+/**
+ * Normalise a UUID string to the canonical uppercase 8-4-4-4-12 form that @c CFUUIDCreateString
+ * produces, so that @c MD5 of the result matches the key the app derives. Dashes and surrounding
+ * whitespace in \a uuid are ignored, and hex digits may be either case; any other character, or a
+ * digit count other than 32, yields @c KeyIvError::UuidInvalid.
+ */
+std::expected<std::string, KeyIvError> canonicalizeUuid(std::string_view uuid);
+
 std::expected<std::vector<std::byte>, ParseError> parseHex(std::string_view hex);
 
 std::expected<std::vector<std::byte>, FileError> readFileExactly(const fs::path &path,
@@ -113,6 +123,9 @@ std::expected<BFCodec, BFCodecError> createCodec(const std::vector<std::byte> &k
 std::expected<std::vector<uint8_t>, FileError> readWholeFile(const fs::path &path);
 
 std::expected<void, FileError> writeWholeFile(const fs::path &path, std::span<const uint8_t> data);
+
+/** Copy \a path to a sibling file with a ".bak" suffix, overwriting any existing backup. */
+std::expected<void, FileError> backupFile(const fs::path &path);
 
 bool isBinaryPlist(std::span<const uint8_t> data);
 

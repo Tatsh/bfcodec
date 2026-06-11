@@ -55,6 +55,41 @@ unjbt -d game-data game-data.jbt
 
 If the directory passed to `-d`/`--extract-to` does not exist it will be created.
 
+### bfc
+
+`bfc` encrypts a single file in place, overwriting it with the encrypted data. The same key and IV
+must be supplied to decrypt it again with `unbfc`.
+
+```shell
+bfc -K 'the game key' game-file
+```
+
+Pass `-o`/`--output` to write to a different path instead of overwriting the input. With
+`--backup`, an existing destination is first copied to `<dest>.bak`.
+
+Pass `--uuid` instead of `-K` to derive the key from a device UUID. The key is the MD5 of the
+UUID's canonical uppercase form, so dashes and letter case are optional.
+
+### unbfc
+
+`unbfc` reverses `bfc`. It decrypts a file in place, overwriting it with the decrypted data. The key
+and IV must match those used to encrypt the file.
+
+```shell
+unbfc -K 'the game key' game-file
+```
+
+Pass `-o`/`--output` to write to a different path instead of overwriting the input. With
+`--backup`, an existing destination is first copied to `<dest>.bak`.
+
+Some iOS games key files to a per-device UUID (for example `mulist` and `prodlist`). Pass that UUID
+with `--uuid`; the key is the MD5 of its canonical uppercase form, so dashes and letter case are
+optional:
+
+```shell
+unbfc --uuid 1ac4f2e0-9b3d-4c77-ae51-2d9f8c0a77b1 mulist
+```
+
 ### C interface
 
 ```c

@@ -23,6 +23,8 @@ std::string message(FileError e) {
         return "File size must be exactly required bytes.";
     case FileError::WriteFailed:
         return "Write failed.";
+    case FileError::BackupFailed:
+        return "Cannot write backup file.";
     default:
         return "Unknown file error.";
     }
@@ -42,6 +44,10 @@ std::string message(KeyIvError e) {
         return "Cannot read key file.";
     case KeyIvError::KeyMd5Failed:
         return "Key: MD5 failed.";
+    case KeyIvError::KeyUuidBoth:
+        return "Use --uuid or -K/--key/--key-file, not together.";
+    case KeyIvError::UuidInvalid:
+        return "UUID must be 32 hexadecimal digits (dashes optional).";
     case KeyIvError::IvParseFailed:
         return "IV: invalid hex.";
     case KeyIvError::IvWrongSize:
@@ -81,6 +87,35 @@ int fromHexChar(char c) {
         return c - 'A' + 10;
     }
     return -1;
+}
+
+std::expected<std::string, KeyIvError> canonicalizeUuid(std::string_view uuid) {
+    std::string hex;
+    hex.reserve(32);
+    for (char c : uuid) {
+        if (c == '-' || std::isspace(static_cast<unsigned char>(c))) {
+            continue;
+        }
+        if (fromHexChar(c) < 0) {
+            return std::unexpected(KeyIvError::UuidInvalid);
+        }
+        hex.push_back(static_cast<char>(std::toupper(static_cast<unsigned char>(c))));
+    }
+    if (hex.size() != 32) {
+        return std::unexpected(KeyIvError::UuidInvalid);
+    }
+    static constexpr std::array<size_t, 5> kGroupSizes = {8, 4, 4, 4, 12};
+    std::string out;
+    out.reserve(36);
+    size_t pos = 0;
+    for (size_t i = 0; i < kGroupSizes.size(); ++i) {
+        if (i != 0) {
+            out.push_back('-');
+        }
+        out.append(hex, pos, kGroupSizes[i]);
+        pos += kGroupSizes[i];
+    }
+    return out;
 }
 
 std::expected<std::vector<std::byte>, ParseError> parseHex(std::string_view hex) {
@@ -188,7 +223,8 @@ namespace {
 // - jubeat plus : 'Konami Bemani Mobile iPad' - jubeat
 // - Unknown - 'jubeatskmpledata'
 // - maybe Jukebeat - 'Konami Bemani Mobile iOS'
-// - REFLEC BEAT plus - 'Konami ReflecBeat For iOS.'
+// - REFLEC BEAT plus - 'Konami ReflecBeat For iOS.' (DecodeType 0, bundled content)
+// - REFLEC BEAT plus - 'Konami ReflecBeatplus.' (DecodeType 1, DLC/downloaded .rb songs)
 // - Unknown - REFLEC BEAT US version
 // - Unknown - Pop'n Rhythmin
 const std::string kDefaultPassphrase("Konami Bemani Mobile iPad");
@@ -197,11 +233,15 @@ const std::string kDefaultPassphrase("Konami Bemani Mobile iPad");
 std::expected<KeyIv, KeyIvError> getKeyIv(argparse::ArgumentParser &program) {
     auto keyOpt = program.present<std::string>("--key");
     auto keyFileOpt = program.present<std::string>("--key-file");
+    auto uuidOpt = program.present<std::string>("--uuid");
     auto ivOpt = program.present<std::string>("--iv");
     auto ivFileOpt = program.present<std::string>("--iv-file");
 
     if (keyOpt && keyFileOpt) {
         return std::unexpected(KeyIvError::KeyAndKeyFileBoth);
+    }
+    if (uuidOpt && (keyOpt || keyFileOpt)) {
+        return std::unexpected(KeyIvError::KeyUuidBoth);
     }
     if (ivOpt && ivFileOpt) {
         return std::unexpected(KeyIvError::IvAndIvFileBoth);
@@ -209,7 +249,15 @@ std::expected<KeyIv, KeyIvError> getKeyIv(argparse::ArgumentParser &program) {
 
     KeyIv out;
     std::optional<std::string> passphraseOpt;
-    if (keyOpt) {
+    if (uuidOpt) {
+        // The app derives the key as MD5 of the canonical uppercase UUID string, so normalise
+        // the supplied UUID to that form before hashing it as the passphrase.
+        auto canonical = canonicalizeUuid(*uuidOpt);
+        if (!canonical) {
+            return std::unexpected(canonical.error());
+        }
+        passphraseOpt = std::move(*canonical);
+    } else if (keyOpt) {
         passphraseOpt = *keyOpt;
     } else if (!keyFileOpt) {
         passphraseOpt = kDefaultPassphrase;
@@ -286,6 +334,17 @@ std::expected<void, FileError> writeWholeFile(const fs::path &path, std::span<co
     f.write(reinterpret_cast<const char *>(data.data()), static_cast<std::streamsize>(data.size()));
     if (!f) {
         return std::unexpected(FileError::WriteFailed);
+    }
+    return {};
+}
+
+std::expected<void, FileError> backupFile(const fs::path &path) {
+    fs::path backupPath = path;
+    backupPath += ".bak";
+    std::error_code ec;
+    fs::copy_file(path, backupPath, fs::copy_options::overwrite_existing, ec);
+    if (ec) {
+        return std::unexpected(FileError::BackupFailed);
     }
     return {};
 }

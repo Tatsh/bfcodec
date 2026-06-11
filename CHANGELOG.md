@@ -9,6 +9,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- `bfc` and `unbfc` accept a `--uuid` option that derives the key from a device UUID. The supplied
+  UUID is normalised to its canonical uppercase `8-4-4-4-12` form before hashing, so dashes and
+  letter case are optional and the result matches `MD5(CFUUIDCreateString(...))`. This decrypts
+  files some iOS games key to a per-device UUID (for example `mulist` and `prodlist`).
+- `bfc` and `unbfc` accept a `--backup` option that backs up the destination to `<dest>.bak`
+  before overwriting it (when the destination already exists).
+- `bfc` and `unbfc` accept a `-o`/`--output` option that writes the result to a given path
+  instead of overwriting the input.
+
 ## [0.0.6] - 2026-05-10
 
 ### Changed

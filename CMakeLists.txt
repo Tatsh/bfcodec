@@ -72,7 +72,9 @@ if(NOT BUILD_DOCS_ONLY)
   if(BUILD_TOOLS)
     add_subdirectory(tools)
     install(FILES
+      man/bfc.1
       man/jbt.1
+      man/unbfc.1
       man/unjbt.1
       DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
     )

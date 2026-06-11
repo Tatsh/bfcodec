@@ -19,6 +19,7 @@
 #include <fnmatch.h>
 #endif
 
+#include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 #include <zip.h>
 
@@ -68,6 +69,7 @@ struct Options {
     bool caseInsensitive = false; // -C
     bool toLowercase = false;     // -LL
     bool wildcardNoSlash = false; // -W
+    bool mulistEntry = false;     // --mulist-entry
     fs::path exdir = ".";
     std::vector<std::string> includePatterns;
     std::vector<std::string> excludePatterns;
@@ -204,7 +206,7 @@ void listShort(zip_t *zip, const Options &opts, const fs::path &archivePath) {
     if (opts.quiet < 2) {
         oss << "---------                     -------\n"
             << std::setw(9) << totalLen << "                     " << count << " file(s)\n";
-        spdlog::info("{}", oss.str());
+        std::cout << oss.str();
     }
 }
 
@@ -231,7 +233,7 @@ void listZipinfo(zip_t *zip, const Options &opts, const fs::path &archivePath) {
         }
     }
     if (opts.quiet < 2) {
-        spdlog::info("{}", oss.str());
+        std::cout << oss.str();
     }
 }
 
@@ -445,6 +447,183 @@ void decryptExtractedFiles(const fs::path &outDir,
     }
 }
 
+// Decrypt a single BFCodec entry buffer using the same on-disk trailer layout as
+// decryptExtractedFiles ([fileSize:4 BE][blockSize:4 BE]). Returns the plaintext
+// truncated to the stored size, or nullopt for a malformed or undecryptable entry.
+std::optional<std::vector<uint8_t>>
+decryptEntryBuffer(std::vector<uint8_t> raw, BFCodec &codec, const Tools::KeyIv &keyIv) {
+    if (raw.size() < 8) {
+        return std::nullopt;
+    }
+    const size_t trailerOffset = raw.size() - 8u;
+    std::span<const uint8_t> trailer = std::span(raw).subspan(trailerOffset, 8u);
+    const uint32_t fileSize =
+        (static_cast<uint32_t>(trailer[0]) << 24) | (static_cast<uint32_t>(trailer[1]) << 16) |
+        (static_cast<uint32_t>(trailer[2]) << 8) | static_cast<uint32_t>(trailer[3]);
+    const uint32_t blockSize =
+        (static_cast<uint32_t>(trailer[4]) << 24) | (static_cast<uint32_t>(trailer[5]) << 16) |
+        (static_cast<uint32_t>(trailer[6]) << 8) | static_cast<uint32_t>(trailer[7]);
+    const size_t cipherLen = std::min<size_t>(blockSize, trailerOffset);
+    if (cipherLen == 0 || (cipherLen % 8u) != 0u) {
+        return std::nullopt;
+    }
+    const size_t storedSize = std::min<size_t>(fileSize, cipherLen);
+    std::vector<uint8_t> plain(cipherLen);
+    std::copy_n(raw.begin(), cipherLen, plain.begin());
+    std::span<std::byte> span = std::as_writable_bytes(std::span(plain).first(cipherLen));
+    auto result = codec.decrypt(span, keyIv.ivBytes);
+    if (!result) {
+        return std::nullopt;
+    }
+    plain.resize(storedSize);
+    return plain;
+}
+
+// Read one entry's raw bytes from a zip archive by name.
+std::optional<std::vector<uint8_t>> readZipEntry(const fs::path &archivePath,
+                                                 const char *entryName) {
+    int zipErr = 0;
+    zip_t *zip = zip_open(archivePath.string().c_str(), ZIP_RDONLY, &zipErr);
+    if (!zip) {
+        return std::nullopt;
+    }
+    const zip_int64_t idx = zip_name_locate(zip, entryName, 0);
+    if (idx < 0) {
+        zip_close(zip);
+        return std::nullopt;
+    }
+    zip_stat_t st;
+    zip_stat_init(&st);
+    if (zip_stat_index(zip, static_cast<zip_uint64_t>(idx), 0, &st) < 0) {
+        zip_close(zip);
+        return std::nullopt;
+    }
+    zip_file_t *zf = zip_fopen_index(zip, static_cast<zip_uint64_t>(idx), 0);
+    if (!zf) {
+        zip_close(zip);
+        return std::nullopt;
+    }
+    std::vector<uint8_t> buf(st.size);
+    zip_uint64_t total = 0;
+    while (total < st.size) {
+        const zip_int64_t nr = zip_fread(zf, buf.data() + total, st.size - total);
+        if (nr <= 0) {
+            zip_fclose(zf);
+            zip_close(zip);
+            return std::nullopt;
+        }
+        total += static_cast<zip_uint64_t>(nr);
+    }
+    zip_fclose(zf);
+    zip_close(zip);
+    return buf;
+}
+
+// Minimal XML element-content escaping for re-emitting libplist string values
+// (which arrive unescaped) into the mulist XML document.
+std::string xmlEscape(std::string_view text) {
+    std::string out;
+    out.reserve(text.size());
+    for (const char c : text) {
+        switch (c) {
+        case '&':
+            out += "&amp;";
+            break;
+        case '<':
+            out += "&lt;";
+            break;
+        case '>':
+            out += "&gt;";
+            break;
+        default:
+            out += c;
+            break;
+        }
+    }
+    return out;
+}
+
+// Read and decrypt the archive's `info` entry, then print a mulist <dict> entry
+// built from it. Name and Artist prefer the Roman field and fall back to the Hira
+// field when Roman is blank; ID is taken verbatim; ItemURL is the akx-dl base
+// joined with the archive's own filename (which carries the per-song token).
+int printMulistEntry(const fs::path &archivePath, BFCodec &codec, const Tools::KeyIv &keyIv) {
+    auto raw = readZipEntry(archivePath, "info");
+    if (!raw) {
+        spdlog::error("Cannot read 'info' entry from archive.");
+        return EXIT_FAILURE;
+    }
+    auto dec = decryptEntryBuffer(std::move(*raw), codec, keyIv);
+    if (!dec) {
+        spdlog::error("Cannot decrypt 'info' entry (wrong key?).");
+        return EXIT_FAILURE;
+    }
+#ifdef HAVE_LIBPLIST
+    plist_t root = nullptr;
+    const auto *chars = reinterpret_cast<const char *>(dec->data());
+    const auto length = static_cast<uint32_t>(dec->size());
+    if (Tools::isBinaryPlist(std::span<const uint8_t>(dec->data(), dec->size()))) {
+        plist_from_bin(chars, length, &root);
+    } else {
+        plist_from_xml(chars, length, &root);
+    }
+    if (!root || plist_get_node_type(root) != PLIST_DICT) {
+        if (root) {
+            plist_free(root);
+        }
+        spdlog::error("'info' is not a plist dictionary.");
+        return EXIT_FAILURE;
+    }
+    auto stringForKey = [root](const char *key) -> std::string {
+        plist_t node = plist_dict_get_item(root, key);
+        if (!node || plist_get_node_type(node) != PLIST_STRING) {
+            return {};
+        }
+        char *value = nullptr;
+        plist_get_string_val(node, &value);
+        std::string out = value ? value : "";
+        if (value) {
+            plist_mem_free(value);
+        }
+        return out;
+    };
+    auto firstNonEmpty = [&stringForKey](std::initializer_list<const char *> keys) {
+        for (const char *key : keys) {
+            std::string value = stringForKey(key);
+            if (!value.empty()) {
+                return value;
+            }
+        }
+        return std::string();
+    };
+    // Artist uses the native ArtistName (the on-device mulist stores artist names in
+    // their native/kanji form); Name prefers the Roman reading, falling back to Hira.
+    const std::string artist = firstNonEmpty({"ArtistName", "ArtistNameRoman", "ArtistNameHira"});
+    const std::string name = firstNonEmpty({"MusicNameRoman", "MusicNameHira"});
+    plist_t idNode = plist_dict_get_item(root, "ID");
+    if (!idNode || plist_get_node_type(idNode) != PLIST_UINT) {
+        plist_free(root);
+        spdlog::error("'info' has no integer ID key.");
+        return EXIT_FAILURE;
+    }
+    uint64_t id = 0;
+    plist_get_uint_val(idNode, &id);
+    plist_free(root);
+    const std::string url = "https://akx-dl.konami.net/akx/data/" + archivePath.filename().string();
+    std::cout << "\t<dict>\n"
+              << "\t\t<key>Artist</key>\n\t\t<string>" << xmlEscape(artist) << "</string>\n"
+              << "\t\t<key>ID</key>\n\t\t<integer>" << id << "</integer>\n"
+              << "\t\t<key>ItemURL</key>\n\t\t<string>" << xmlEscape(url) << "</string>\n"
+              << "\t\t<key>Name</key>\n\t\t<string>" << xmlEscape(name) << "</string>\n"
+              << "\t</dict>\n";
+    return EXIT_SUCCESS;
+#else
+    (void)archivePath;
+    spdlog::error("--mulist-entry requires libplist (HAVE_LIBPLIST) support.");
+    return EXIT_FAILURE;
+#endif
+}
+
 } // namespace
 
 int main(int argc, char *argv[]) {
@@ -457,6 +636,8 @@ int main(int argc, char *argv[]) {
         .help("Passphrase (MD5-hashed to 16 bytes); default is the passphrase for jubeat Plus.");
     program.add_argument("--key-file")
         .help("Path to key file (first 16 bytes used; overrides default passphrase).");
+    program.add_argument("--uuid").help(
+        "Derive the key from a device UUID (MD5 of its canonical uppercase form).");
     program.add_argument("--iv").help("IV as hex.");
     program.add_argument("--iv-file").help("Path to IV file (first 8 bytes used).");
 
@@ -506,6 +687,10 @@ int main(int argc, char *argv[]) {
         .help("* and ? do not match /.")
         .default_value(false)
         .implicit_value(true);
+    program.add_argument("--mulist-entry")
+        .help("Print a mulist <dict> entry built from the archive's info file (requires key).")
+        .default_value(false)
+        .implicit_value(true);
 
     program.add_argument("-d", "--extract-to")
         .help("Extraction directory (default: .).")
@@ -525,6 +710,7 @@ int main(int argc, char *argv[]) {
         .default_value(std::string(""));
     program.add_argument("files").help("Optional member list.").nargs(argparse::nargs_pattern::any);
 
+    spdlog::set_default_logger(spdlog::stderr_color_mt("unjbt"));
     spdlog::set_pattern("%v");
 
     try {
@@ -551,6 +737,7 @@ int main(int argc, char *argv[]) {
     opts.caseInsensitive = program.get<bool>("-C");
     opts.toLowercase = program.get<bool>("-LL");
     opts.wildcardNoSlash = program.get<bool>("-W");
+    opts.mulistEntry = program.get<bool>("--mulist-entry");
     opts.exdir = fs::path(program.get<std::string>("--extract-to"));
 
     if (program.is_used("-x")) {
@@ -577,7 +764,7 @@ int main(int argc, char *argv[]) {
     fs::path archivePath(program.get<std::string>("archive"));
 
     if (program.get<bool>("-V")) {
-        spdlog::info("unjbt v" BFCODEC_VERSION);
+        std::cout << "unjbt v" BFCODEC_VERSION "\n";
         return EXIT_SUCCESS;
     }
 
@@ -614,6 +801,10 @@ int main(int argc, char *argv[]) {
     if (!codec) {
         spdlog::error("{}", BFCodec::message(codec.error()));
         return EXIT_FAILURE;
+    }
+
+    if (opts.mulistEntry) {
+        return printMulistEntry(archivePath, *codec, *keyIv);
     }
 
     auto filter = [&opts](const std::string &name) { return shouldInclude(name, opts); };
@@ -655,7 +846,7 @@ int main(int argc, char *argv[]) {
 #endif
         fs::remove_all(tmpDir, ec);
         if (opts.quiet < 2) {
-            spdlog::info("No errors detected in archive.");
+            std::cout << "No errors detected in archive.\n";
         }
         return EXIT_SUCCESS;
     }
@@ -713,7 +904,7 @@ int main(int argc, char *argv[]) {
         }
 #endif
         summary += ".";
-        spdlog::info("{}", summary);
+        std::cout << summary << "\n";
     }
 
     return EXIT_SUCCESS;

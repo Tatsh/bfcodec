@@ -1,6 +1,9 @@
 *.info
+*.ipa
 *.kate-swp
 *.log
+*.jbt
+*.rb
 *~
 .*.swp
 .*_cache/
@@ -12,6 +15,7 @@
 /.bash_profile
 /.bashrc
 /.claude/commands
+/.claude/hooks
 /.claude/settings.local.json
 /.gitconfig
 /.gitmodules
@@ -27,4 +31,6 @@
 /build/
 /dist/
 /vcpkg_installed/
+mulist*
 node_modules/
+prodlist*
