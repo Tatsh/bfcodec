@@ -135,14 +135,17 @@ bool matchPattern(const std::string &path, const std::string &pattern, const Opt
 
 bool shouldInclude(const std::string &entryPath, const Options &opts) {
     for (const auto &x : opts.excludePatterns) {
-        if (matchPattern(entryPath, x, opts))
+        if (matchPattern(entryPath, x, opts)) {
             return false;
+        }
     }
-    if (opts.includePatterns.empty())
+    if (opts.includePatterns.empty()) {
         return true;
+    }
     for (const auto &i : opts.includePatterns) {
-        if (matchPattern(entryPath, i, opts))
+        if (matchPattern(entryPath, i, opts)) {
             return true;
+        }
     }
     return false;
 }
@@ -442,8 +445,9 @@ void decryptExtractedFiles(const fs::path &outDir,
         }
 
         ++decryptedCount;
-        if (needsPngdefry && Tools::tryPngdefryInPlace(path))
+        if (needsPngdefry && Tools::tryPngdefryInPlace(path)) {
             ++pngFixedCount;
+        }
     }
 }
 

@@ -31,6 +31,7 @@
 /.bash_profile
 /.bashrc
 /.claude/commands
+/.claude/hooks
 /.gitconfig
 /.gitmodules
 /.idea
@@ -46,6 +47,7 @@
 /build/
 /dist/
 /vcpkg_installed/
+mulist*
 node_modules/
 pylock*.toml
 vcpkg*.json

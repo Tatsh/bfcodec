@@ -56,17 +56,13 @@ flathub
 foxundermoon
 frida
 fsafe
-functiongraph
 fvisibility
 ghidra
 gmock
-gotoquery
 graphviz
 hcrypthash
 hcryptprov
 hira
-iadd
-idset
 ifdef
 ifndef
 iiiiiihhh
@@ -81,7 +77,6 @@ jsonschema
 jubeat
 jubeatskmpledata
 jukebeat
-jython
 lbfcodec
 ldflags
 libcommon
@@ -103,7 +98,6 @@ msys
 msystem
 mulist
 mypy
-navigatable
 ndebug
 nsis
 nullptr
@@ -113,12 +107,12 @@ pacboy
 pngcrush
 pngdefry
 pngfix
-popups
 preapproved
 prodlist
 productversion
 prov
 publickey
+pyinstaller
 pylock
 pyproject
 rbff
@@ -153,7 +147,6 @@ vedantmgoyal
 vendored
 venv
 versioninfo
-viewname
 weverything
 winarm
 winget
@@ -166,4 +159,5 @@ zipcmp
 zipinfo
 zipmerge
 ziptool
+zizmor
 zstd

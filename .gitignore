@@ -1,9 +1,6 @@
 *.info
-*.ipa
 *.kate-swp
 *.log
-*.jbt
-*.rb
 *~
 .*.swp
 .*_cache/
@@ -33,4 +30,3 @@
 /vcpkg_installed/
 mulist*
 node_modules/
-prodlist*

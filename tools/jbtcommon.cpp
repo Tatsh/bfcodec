@@ -122,8 +122,9 @@ std::expected<std::vector<std::byte>, ParseError> parseHex(std::string_view hex)
     std::vector<std::byte> out;
     int nibble = -1;
     for (char c : hex) {
-        if (std::isspace(static_cast<unsigned char>(c)))
+        if (std::isspace(static_cast<unsigned char>(c))) {
             continue;
+        }
         int v = fromHexChar(c);
         if (v < 0) {
             return std::unexpected(ParseError::InvalidHexChar);
