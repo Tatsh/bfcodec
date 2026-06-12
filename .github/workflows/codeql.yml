@@ -11,27 +11,32 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           fetch-depth: 0
-      - name: Install dependencies
+          persist-credentials: false
+      - if: matrix.language == 'c-cpp'
+        name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libplist-dev libspdlog-dev libssl-dev libzip-dev zipcmp zipmerge ziptool
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e
         with:
+          build-mode: ${{ matrix.build-mode }}
           languages: ${{ matrix.language }}
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e
         with:
           category: /language:${{matrix.language}}
     strategy:
       fail-fast: false
       matrix:
-        language: ['cpp']
+        include:
+          - build-mode: autobuild
+            language: c-cpp
+          - build-mode: none
+            language: actions
 name: CodeQL
 'on':
   pull_request:

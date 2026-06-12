@@ -6,3 +6,6 @@ rules:
     ignore:
       - 'publish-winget.yml'
       - 'release.yml'
+  superfluous-actions:
+    ignore:
+      - 'flatpak.yml'
