@@ -27,6 +27,7 @@ from collections.abc import Sequence
 from pathlib import Path
 import argparse
 import logging
+import random
 import re
 import shlex
 import shutil
@@ -38,7 +39,8 @@ logger = logging.getLogger(__name__)
 KEYS_BY_EXTENSION = {
     '.rb': (
         'Konami ReflecBeat For iOS.',  # DecodeType 0, content bundled with the app.
-        'Konami ReflecBeatplus.'  # DecodeType 1, downloaded DLC songs.
+        'Konami ReflecBeatplus.',  # DecodeType 1, downloaded DLC songs.
+        'REFLECBEATplus lovers.' # World version (does not have DecodeType 1).
     ),
     '.jbt': ('Konami Bemani Mobile iPad', 'jubeatskmpledata', 'Konami Bemani Mobile iOS')
 }
@@ -164,16 +166,16 @@ def deploy(*, mulist_path: Path, song_paths: list[Path], user: str, host: str, a
     # A single mkdir -p ensures both destinations exist. The paths are quoted because the remote
     # shell, not Python, splits the command, and Private Documents contains a space.
     run_command(('ssh', *ssh_prefix('-p', port, identity), target, 'mkdir', '-p',
-                 shlex.quote(documents), shlex.quote(private_documents)),
+                 documents, private_documents),
                 dry_run=dry_run,
                 verbose=verbose)
     run_command(('scp', *ssh_prefix('-P', port, identity), str(mulist_path),
-                 f'{target}:{shlex.quote(documents + "/")}'),
+                 f'{target}:{documents + "/"}'),
                 dry_run=dry_run,
                 verbose=verbose)
     if song_paths:
         run_command(('scp', *ssh_prefix('-P', port, identity), *(str(p) for p in song_paths),
-                     f'{target}:{shlex.quote(private_documents + "/")}'),
+                     f'{target}:{private_documents + "/"}'),
                     dry_run=dry_run,
                     verbose=verbose)
 
@@ -277,7 +279,7 @@ def main(argv: Sequence[str]) -> int:
     if args.dry_run:
         logger.info('Would write plaintext mulist with %d entries to %s.', len(entries), plaintext)
     else:
-        plaintext.write_text(build_mulist(entries), encoding='utf-8')
+        plaintext.write_bytes(random.randbytes(4) + build_mulist(entries).encode())
         logger.debug('Wrote plaintext mulist with %d entries to %s.', len(entries), plaintext)
     encrypted = staging / 'mulist'
     # bfc derives the key from the device UUID and uses the same default IV the device expects.
