@@ -601,9 +601,10 @@ int printMulistEntry(const fs::path &archivePath, BFCodec &codec, const Tools::K
         return std::string();
     };
     // Artist uses the native ArtistName (the on-device mulist stores artist names in
-    // their native/kanji form); Name prefers the Roman reading, falling back to Hira.
+    // their native/kanji form); Name likewise prefers the native MusicName, falling
+    // back to the Roman reading and then Hira.
     const std::string artist = firstNonEmpty({"ArtistName", "ArtistNameRoman", "ArtistNameHira"});
-    const std::string name = firstNonEmpty({"MusicNameRoman", "MusicNameHira"});
+    const std::string name = firstNonEmpty({"MusicName", "MusicNameRoman", "MusicNameHira"});
     plist_t idNode = plist_dict_get_item(root, "ID");
     if (!idNode || plist_get_node_type(idNode) != PLIST_UINT) {
         plist_free(root);
