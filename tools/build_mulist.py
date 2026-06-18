@@ -6,7 +6,9 @@ tries every passphrase for that extension with ``unjbt --mulist-entry`` until on
 package's ``info`` entry and prints a ``<dict>`` mulist entry. The collected entries are wrapped in
 the standard property-list ``<array>`` to form a ``mulist`` document, which is then encrypted with
 ``bfc`` using the key derived from the device's Keychain UUID (``--uuid``). Finally the encrypted
-``mulist`` and the renamed song packages are copied to the application container over SSH.
+``mulist`` and the renamed song packages are copied to the application container over SSH. The
+``mulist`` always goes by ``scp``; passing ``--rsync`` sends the song packages with ``rsync`` when
+the device has it, which requires public-key authentication.
 
 The fixed IV baked into ``unjbt`` and ``bfc`` (``E36631DA2C85A064``) is used throughout, so it is
 never supplied here.
@@ -67,13 +69,24 @@ SSH_AUTH_OPTIONS = ('-F', '/dev/null', '-o', 'KbdInteractiveAuthentication=yes',
                     'PreferredAuthentications=publickey,password,keyboard-interactive', '-o',
                     'PasswordAuthentication=yes')
 """
-Authentication options forced onto every ssh and scp call so the user's own ssh_config and the
-device's typical lack of key setup do not get in the way. ``-F /dev/null`` ignores the user's
-ssh_config, while password and keyboard-interactive authentication are enabled; public-key
-authentication stays first so existing keys are still used without a prompt when they work.
+Authentication options for the default scp transport, used when ``--rsync`` is not given. The
+user's own ssh_config and the device's typical lack of key setup do not get in the way: ``-F
+/dev/null`` ignores the user's ssh_config, while password and keyboard-interactive authentication
+are enabled; public-key authentication stays first so existing keys are still used without a prompt
+when they work.
 """
 
-LEADING_DIGITS = re.compile(r'\d+')
+KEY_ONLY_SSH_OPTIONS = ('-o', 'BatchMode=yes', '-o', 'PreferredAuthentications=publickey', '-o',
+                        'PasswordAuthentication=no', '-o', 'KbdInteractiveAuthentication=no')
+"""
+Authentication options used when ``--rsync`` is given. rsync launches its own ssh with no
+controlling terminal, so a password prompt can never be answered; ``BatchMode=yes`` makes that
+failure immediate and clear rather than a hang, and public-key is the only permitted method. Unlike
+``SSH_AUTH_OPTIONS`` this does not pass ``-F /dev/null``, so the user's ssh_config (where their keys
+and host aliases usually live) is honoured.
+"""
+
+LEADING_DIGITS = re.compile(r'^W?(\d+)')
 """
 Leading run of digits in a package filename, used to discard the per-song token suffix (for
 example 100040001_RqrX.rb becomes 100040001.rb).
@@ -96,7 +109,7 @@ def trimmed_name(path: Path) -> str:
     if not match:
         logger.warning('Keeping %s as-is; it does not start with digits.', path.name)
         return path.name
-    return f'{match.group()}{path.suffix.lower()}'
+    return f'{match.group(1)}{path.suffix.lower()}'
 
 
 def extract_entry(unjbt: str, package: Path) -> str | None:
@@ -143,41 +156,131 @@ def run_command(command: Sequence[str], *, dry_run: bool, verbose: bool) -> None
     subprocess.run(command, check=True)
 
 
-def ssh_prefix(option: str, port: int, identity: str | None) -> tuple[str, ...]:
+def ssh_prefix(option: str, port: int, identity: str | None,
+               auth_options: Sequence[str] = SSH_AUTH_OPTIONS) -> tuple[str, ...]:
     """
     Return the leading ``ssh``/``scp`` arguments shared by every remote call.
 
     ``option`` is the port flag, which differs between the tools (``-p`` for ssh, ``-P`` for scp).
+    ``auth_options`` selects the authentication policy, defaulting to the password-friendly set.
     """
-    prefix = (option, str(port), *SSH_AUTH_OPTIONS)
+    prefix = (option, str(port), *auth_options)
     if identity:
         return (*prefix, '-i', identity)
     return prefix
 
 
+def rsync_remote_shell(port: int, identity: str | None) -> str:
+    """
+    Return the value for rsync's ``-e`` option: the ssh command with key-only auth options.
+
+    rsync spawns its own ssh, so the port and authentication options that ``ssh_prefix`` adds to a
+    direct call must be packed into a single ``-e`` string instead. Key-only authentication is
+    forced because that ssh has no terminal on which to answer a password prompt.
+    """
+    shell = ['ssh', '-p', str(port), *KEY_ONLY_SSH_OPTIONS]
+    if identity:
+        shell += ['-i', identity]
+    return shlex.join(shell)
+
+
+def remote_rsync_path(target: str, port: int, identity: str | None,
+                      auth_options: Sequence[str], *, dry_run: bool,
+                      verbose: bool) -> str | None:
+    """
+    Return the device's ``rsync`` path, or ``None`` when it has none.
+
+    The probe runs ``command -v rsync`` over SSH and returns whatever path it prints, so that path
+    can be handed straight to rsync's ``--rsync-path``. During a dry run no connection is made and
+    ``None`` is returned, so the simulated commands stay offline and fall back to scp.
+    """
+    command = ('ssh', *ssh_prefix('-p', port, identity, auth_options), target, 'command', '-v',
+               'rsync')
+    if dry_run:
+        logger.info('Would check for rsync on the device: %s', shlex.join(command))
+        return None
+    logger.log(logging.INFO if verbose else logging.DEBUG,
+               'Checking for rsync on the device: %s', shlex.join(command))
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    path = result.stdout.strip() if result.returncode == 0 else ''
+    if path:
+        logger.debug('rsync is available on the device at %s.', path)
+        return path
+    logger.debug('rsync is not available on the device.')
+    return None
+
+
+def copy_to_remote(sources: Sequence[Path], remote_dir: str, *, target: str, port: int,
+                   identity: str | None, auth_options: Sequence[str], rsync_path: str | None,
+                   dry_run: bool, verbose: bool) -> None:
+    """
+    Copy ``sources`` into ``remote_dir`` on the device.
+
+    rsync is used only when ``rsync_path`` is set; it is the device's own rsync binary, passed
+    through to rsync's ``--rsync-path`` so the remote end is launched explicitly rather than relying
+    on its login ``PATH``. Otherwise scp is used.
+    """
+    paths = tuple(str(p) for p in sources)
+    if rsync_path:
+        # rsync passes the destination through the remote shell, so the path (which may contain a
+        # space) is quoted to survive that extra round of word splitting.
+        destination = f'{target}:{shlex.quote(remote_dir + "/")}'
+        command = ('rsync', '-e', rsync_remote_shell(port, identity),
+                   f'--rsync-path={rsync_path}', *paths, destination)
+    else:
+        command = ('scp', *ssh_prefix('-P', port, identity, auth_options), *paths,
+                   f'{target}:{remote_dir + "/"}')
+    run_command(command, dry_run=dry_run, verbose=verbose)
+
+
 def deploy(*, mulist_path: Path, song_paths: list[Path], user: str, host: str, app_uuid: str,
-           port: int, identity: str | None, dry_run: bool, verbose: bool) -> None:
+           port: int, identity: str | None, use_rsync: bool, dry_run: bool,
+           verbose: bool) -> None:
     """Create the remote directories and copy the mulist and song packages into the container."""
     target = f'{user}@{host}'
     container = f'{REMOTE_CONTAINER_ROOT}/{app_uuid}'
     documents = f'{container}/Documents'
     private_documents = f'{container}/Library/Private Documents'
+    # Opting into rsync also commits to public-key authentication, since rsync's own ssh cannot
+    # answer a password prompt.
+    auth_options = KEY_ONLY_SSH_OPTIONS if use_rsync else SSH_AUTH_OPTIONS
 
     # A single mkdir -p ensures both destinations exist. The paths are quoted because the remote
     # shell, not Python, splits the command, and Private Documents contains a space.
-    run_command(('ssh', *ssh_prefix('-p', port, identity), target, 'mkdir', '-p',
+    run_command(('ssh', *ssh_prefix('-p', port, identity, auth_options), target, 'mkdir', '-p',
                  documents, private_documents),
                 dry_run=dry_run,
                 verbose=verbose)
-    run_command(('scp', *ssh_prefix('-P', port, identity), str(mulist_path),
-                 f'{target}:{documents + "/"}'),
-                dry_run=dry_run,
-                verbose=verbose)
+    # The mulist is always copied with scp; only the larger song packages may use rsync.
+    copy_to_remote((mulist_path,),
+                   documents,
+                   target=target,
+                   port=port,
+                   identity=identity,
+                   auth_options=auth_options,
+                   rsync_path=None,
+                   dry_run=dry_run,
+                   verbose=verbose)
     if song_paths:
-        run_command(('scp', *ssh_prefix('-P', port, identity), *(str(p) for p in song_paths),
-                     f'{target}:{private_documents + "/"}'),
-                    dry_run=dry_run,
-                    verbose=verbose)
+        rsync_path = None
+        if use_rsync:
+            rsync_path = remote_rsync_path(target,
+                                           port,
+                                           identity,
+                                           auth_options,
+                                           dry_run=dry_run,
+                                           verbose=verbose)
+            if rsync_path is None and not dry_run:
+                logger.warning('rsync requested but not available on the device; using scp.')
+        copy_to_remote(song_paths,
+                       private_documents,
+                       target=target,
+                       port=port,
+                       identity=identity,
+                       auth_options=auth_options,
+                       rsync_path=rsync_path,
+                       dry_run=dry_run,
+                       verbose=verbose)
 
 
 def resolve_tool(override: str | None, name: str) -> str:
@@ -206,6 +309,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument('--user', default='mobile', help='SSH user (default: mobile).')
     parser.add_argument('--port', type=int, default=22, help='SSH port (default: 22).')
     parser.add_argument('--identity', help='SSH identity (private key) file.')
+    parser.add_argument('--rsync',
+                        action='store_true',
+                        help='Use rsync for the song packages when the device has it. Requires '
+                        'public-key authentication (no password prompt); the mulist itself is '
+                        'always copied with scp.')
     parser.add_argument('--staging-dir',
                         type=Path,
                         default=Path('mulist-out'),
@@ -294,6 +402,7 @@ def main(argv: Sequence[str]) -> int:
            app_uuid=args.app_uuid,
            port=args.port,
            identity=args.identity,
+           use_rsync=args.rsync,
            dry_run=args.dry_run,
            verbose=args.verbose)
 
