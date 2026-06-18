@@ -19,7 +19,7 @@
   want_main: false,
   want_tests: false,
   clang_format_args: 'include/*.h src/*.c* tools/*.c* tools/*.h',
-  shared_ignore+: ['mulist*'],
+  shared_ignore+: ['.deploy-rb-*', 'mulist*'],
   package_json+: {
     cspell+: {
       ignorePaths+: [
