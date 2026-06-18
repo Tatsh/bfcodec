@@ -37,6 +37,7 @@ dcmake
 dcoverage
 dcpack
 declspec
+destdir
 djson
 dllexport
 dllimport
@@ -139,6 +140,7 @@ shlib
 snapcore
 snapcraft
 softprops
+sshpass
 startupinfow
 strequal
 tatsh
