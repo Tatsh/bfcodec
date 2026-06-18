@@ -233,6 +233,74 @@ std::string shellJoin(const std::vector<std::string> &command) {
     return out;
 }
 
+// The connection parameters carried by the HOST positional. host is always set; the others are
+// present only when the URI form supplied them.
+struct HostInfo {
+    std::string host;
+    std::optional<std::string> user;
+    std::optional<std::string> password;
+    std::optional<int> port;
+};
+
+// Parse the HOST positional, which is either a bare hostname or IP address or a URI of the form
+// [user[:password]@]host[:port]. The last '@' separates the user-info (so a password may contain
+// '@'); the first ':' in the user-info separates the user from the password (so a password may
+// contain ':'). A trailing ':port' is recognised only when every character after the last colon is
+// a digit and the remaining host has no colon, which leaves bare IPv6 addresses untouched. Returns
+// nullopt when the host is empty or the port is not a valid number.
+std::optional<HostInfo> parseHost(const std::string &raw) {
+    HostInfo info;
+    std::string rest = raw;
+    if (const auto at = rest.rfind('@'); at != std::string::npos) {
+        const std::string userInfo = rest.substr(0, at);
+        rest = rest.substr(at + 1);
+        if (const auto colon = userInfo.find(':'); colon == std::string::npos) {
+            info.user = userInfo;
+        } else {
+            info.user = userInfo.substr(0, colon);
+            info.password = userInfo.substr(colon + 1);
+        }
+    }
+    if (const auto colon = rest.rfind(':'); colon != std::string::npos && colon + 1 < rest.size()) {
+        const std::string portText = rest.substr(colon + 1);
+        const std::string hostText = rest.substr(0, colon);
+        const bool allDigits = std::all_of(
+            portText.begin(), portText.end(), [](unsigned char c) { return std::isdigit(c) != 0; });
+        if (allDigits && hostText.find(':') == std::string::npos) {
+            try {
+                info.port = std::stoi(portText);
+            } catch (const std::exception &) {
+                return std::nullopt;
+            }
+            rest = hostText;
+        }
+    }
+    if (rest.empty()) {
+        return std::nullopt;
+    }
+    info.host = rest;
+    return info;
+}
+
+// Export the password to the SSHPASS environment variable so a child sshpass invocation can read it
+// without it appearing on any command line. Returns false when the variable cannot be set.
+bool setPasswordEnv(const std::string &password) {
+#ifdef _WIN32
+    return _putenv_s("SSHPASS", password.c_str()) == 0;
+#else
+    return ::setenv("SSHPASS", password.c_str(), 1) == 0;
+#endif
+}
+
+// Prepend `sshpass -e` to a remote command when a password was supplied, so ssh and scp read it
+// from the SSHPASS environment variable instead of prompting.
+std::vector<std::string> withPassword(std::vector<std::string> command, bool usePassword) {
+    if (usePassword) {
+        command.insert(command.begin(), {std::string("sshpass"), std::string("-e")});
+    }
+    return command;
+}
+
 // A decrypted package: the mulist <dict> entry built from its info, and the passphrase that worked
 // (so a world-version package can be recognised and re-encrypted).
 struct ExtractedEntry {
@@ -328,6 +396,74 @@ std::string randomHex() {
     return out;
 }
 
+// Test whether a directory accepts new entries by creating and removing a probe subdirectory. This
+// is more reliable than inspecting permission bits, which cannot account for ACLs or read-only
+// mounts.
+bool directoryIsWritable(const fs::path &dir) {
+    std::error_code ec;
+    const fs::path probe = dir / (".deploy-rb-probe-" + randomHex());
+    if (!fs::create_directory(probe, ec) || ec) {
+        return false;
+    }
+    fs::remove(probe, ec);
+    return true;
+}
+
+// Resolve and create the local staging directory. An explicit --staging-dir override must already
+// exist and be writable, otherwise the run fails immediately. Without an override a uniquely named,
+// dot-prefixed directory is created in the current directory, falling back to the system temporary
+// directory when the current directory is not writable. Returns nullopt on a fatal error, which has
+// already been logged. During a dry run nothing is created and the would-be path is returned.
+std::optional<fs::path> resolveStagingDir(const std::optional<std::string> &overridePath,
+                                          bool dryRun) {
+    std::error_code ec;
+    if (overridePath) {
+        const fs::path dir(*overridePath);
+        if (!fs::exists(dir, ec)) {
+            spdlog::error("Staging directory {} does not exist.", dir.string());
+            return std::nullopt;
+        }
+        if (!fs::is_directory(dir, ec)) {
+            spdlog::error("Staging path {} is not a directory.", dir.string());
+            return std::nullopt;
+        }
+        // The writability probe writes a file, so it is skipped during a dry run.
+        if (!dryRun && !directoryIsWritable(dir)) {
+            spdlog::error("Staging directory {} is not writable.", dir.string());
+            return std::nullopt;
+        }
+        spdlog::debug("Staging directory: {}.", dir.string());
+        return dir;
+    }
+    const std::string name = ".deploy-rb-" + randomHex();
+    if (dryRun) {
+        const fs::path dir = fs::path(".") / name;
+        spdlog::info("Would create staging directory: {}.", dir.string());
+        return dir;
+    }
+    fs::path dir = fs::current_path(ec) / name;
+    if (!ec) {
+        fs::create_directory(dir, ec);
+        if (!ec) {
+            spdlog::debug("Staging directory: {}.", dir.string());
+            return dir;
+        }
+    }
+    spdlog::warn("Current directory is not writable; using the system temporary directory.");
+    dir = fs::temp_directory_path(ec) / name;
+    if (ec) {
+        spdlog::error("Cannot locate a temporary directory.");
+        return std::nullopt;
+    }
+    fs::create_directory(dir, ec);
+    if (ec) {
+        spdlog::error("Cannot create staging directory: {}.", dir.string());
+        return std::nullopt;
+    }
+    spdlog::debug("Staging directory: {}.", dir.string());
+    return dir;
+}
+
 // Run a command, or log it when dryRun is set. The named tool is resolved on PATH first so a missing
 // ssh/scp/rsync produces a clear error on every platform rather than an opaque failure. The child
 // inherits the terminal so ssh and scp can prompt for a password interactively. Returns false on a
@@ -393,6 +529,7 @@ bool remoteHasRsync(const std::string &target,
                     int port,
                     const std::optional<std::string> &identity,
                     const std::vector<std::string> &authOptions,
+                    bool usePassword,
                     bool dryRun,
                     bool verbose) {
     std::vector<std::string> command = {"ssh"};
@@ -402,6 +539,7 @@ bool remoteHasRsync(const std::string &target,
     command.push_back("command");
     command.push_back("-v");
     command.push_back("rsync");
+    command = withPassword(command, usePassword);
     const std::string rendered = shellJoin(command);
     if (dryRun) {
         spdlog::info("Would check for rsync on the device: {}", rendered);
@@ -434,12 +572,14 @@ bool copyToRemote(const std::vector<fs::path> &sources,
                   const std::optional<std::string> &identity,
                   const std::vector<std::string> &authOptions,
                   bool useRsyncTransport,
+                  bool usePassword,
                   bool dryRun,
                   bool verbose) {
     std::vector<std::string> command;
     if (useRsyncTransport) {
         // rsync passes the destination through the remote shell, so the path (which may contain a
-        // space) is quoted to survive that extra round of word splitting.
+        // space) is quoted to survive that extra round of word splitting. rsync always uses
+        // key-only authentication, so no password is applied here.
         command.push_back("rsync");
         command.push_back("-e");
         command.push_back(rsyncRemoteShell(port, identity));
@@ -455,6 +595,7 @@ bool copyToRemote(const std::vector<fs::path> &sources,
             command.push_back(source.string());
         }
         command.push_back(target + ":" + remoteDir + "/");
+        command = withPassword(command, usePassword);
     }
     return runCommand(command, dryRun, verbose);
 }
@@ -468,6 +609,7 @@ bool deploy(const fs::path &mulistPath,
             int port,
             const std::optional<std::string> &identity,
             bool useRsync,
+            bool usePassword,
             bool dryRun,
             bool verbose) {
     const std::string target = user + "@" + host;
@@ -488,13 +630,21 @@ bool deploy(const fs::path &mulistPath,
     mkdir.push_back("-p");
     mkdir.push_back(documents);
     mkdir.push_back(privateDocuments);
-    if (!runCommand(mkdir, dryRun, verbose)) {
+    if (!runCommand(withPassword(mkdir, usePassword), dryRun, verbose)) {
         return false;
     }
 
     // The mulist is always copied with scp; only the larger song packages may use rsync.
-    if (!copyToRemote(
-            {mulistPath}, documents, target, port, identity, authOptions, false, dryRun, verbose)) {
+    if (!copyToRemote({mulistPath},
+                      documents,
+                      target,
+                      port,
+                      identity,
+                      authOptions,
+                      false,
+                      usePassword,
+                      dryRun,
+                      verbose)) {
         return false;
     }
 
@@ -502,7 +652,7 @@ bool deploy(const fs::path &mulistPath,
         bool useRsyncTransport = false;
         if (useRsync) {
             useRsyncTransport =
-                remoteHasRsync(target, port, identity, authOptions, dryRun, verbose);
+                remoteHasRsync(target, port, identity, authOptions, usePassword, dryRun, verbose);
             if (!useRsyncTransport && !dryRun) {
                 spdlog::warn("rsync requested but not available on the device; using scp.");
             }
@@ -514,6 +664,7 @@ bool deploy(const fs::path &mulistPath,
                           identity,
                           authOptions,
                           useRsyncTransport,
+                          usePassword,
                           dryRun,
                           verbose)) {
             return false;
@@ -665,65 +816,77 @@ int main(int argc, char *argv[]) {
         "Japanese release (jp.konami.rbplus) is supported; world-version packages are skipped "
         "unless --convert-world is given, which re-encrypts them to the Japanese format.");
 
-    program.add_argument("packages")
+    program.add_argument("HOST").help(
+        "SSH host of the device. May be a hostname or IP address, or a URI of the form "
+        "[user[:password]@]host[:port] to also set the user, password, and port.");
+    program.add_argument("APP-UUID")
+        .help("Application container UUID naming the remote directory.");
+    program.add_argument("UUID").help(
+        "Device Keychain UUID; the mulist key is MD5 of its uppercase form.");
+    program.add_argument("FILES")
         .help("The .rb / .jbt packages to include.")
         .nargs(argparse::nargs_pattern::at_least_one);
-    program.add_argument("--uuid").required().help(
-        "Device Keychain UUID; the mulist key is MD5 of its uppercase form.");
-    program.add_argument("--app-uuid")
-        .required()
-        .help("Application container UUID naming the remote directory.");
-    program.add_argument("--host").required().help("SSH host of the device.");
-    program.add_argument("--user")
-        .default_value(std::string("mobile"))
-        .help("SSH user (default: mobile).");
-    program.add_argument("--port").scan<'i', int>().default_value(22).help(
-        "SSH port (default: 22).");
-    program.add_argument("--identity").help("SSH identity (private key) file.");
-    program.add_argument("--type")
-        .default_value(std::string("rb"))
-        .choices("rb", "jbt")
-        .help("Package type selecting the decryption keys: rb or jbt (default: rb).");
-    program.add_argument("--convert-world")
+    program.add_argument("-W", "--convert-world")
         .help("Re-encrypt world-version (jp.konami.rbplusw) packages for the Japanese release "
               "instead of skipping them.")
         .default_value(false)
         .implicit_value(true);
-    program.add_argument("--database")
+    program.add_argument("--db")
         .default_value(std::string("goodrb.json"))
         .help("Path to the goodrb.json database used to validate rb packages by SHA-256 "
               "(default: goodrb.json in the current directory).");
-    program.add_argument("--process-non-matching")
-        .help("Process every input file without consulting the database. This disables the SHA-256 "
-              "check.")
+    program.add_argument("-d", "--debug")
+        .help("Enable debug-level logging.")
         .default_value(false)
         .implicit_value(true);
-    program.add_argument("--process-bundled")
-        .help("Include packages the database marks as bundled, which are skipped by default.")
-        .default_value(false)
-        .implicit_value(true);
-    program.add_argument("--rsync")
-        .help("Use rsync for the song packages when the device has it. Requires public-key "
-              "authentication (no password prompt); the mulist itself is always copied with scp.")
-        .default_value(false)
-        .implicit_value(true);
-    program.add_argument("--staging-dir")
-        .default_value(std::string("mulist-out"))
-        .help("Local directory for the built mulist and renamed packages.");
-    program.add_argument("-j", "--jobs")
-        .scan<'i', int>()
-        .default_value(static_cast<int>(hardwareJobs))
-        .help("Number of files to process in parallel (default: number of CPUs).");
     program.add_argument("-y", "--dry-run")
         .help("Simulate every step, creating no files and only logging commands.")
         .default_value(false)
         .implicit_value(true);
-    program.add_argument("-v", "--verbose")
-        .help("Report each step.")
+    program.add_argument("-i", "--identity").help("SSH identity (private key) file.");
+    program.add_argument("-j", "--jobs")
+        .scan<'i', int>()
+        .default_value(static_cast<int>(hardwareJobs))
+        .help("Number of files to process in parallel (default: number of CPUs).");
+    program.add_argument("-K", "--keep")
+        .help("Keep the staging directory after deployment instead of removing it.")
         .default_value(false)
         .implicit_value(true);
-    program.add_argument("-d", "--debug")
-        .help("Enable debug-level logging.")
+    program.add_argument("-p", "--password")
+        .help("SSH password, fed to ssh and scp through sshpass. Overridden by a password given in "
+              "HOST; incompatible with --rsync.");
+    program.add_argument("-P", "--port")
+        .scan<'i', int>()
+        .default_value(22)
+        .help("SSH port (default: 22). Overridden by a port given in HOST.");
+    program.add_argument("-B", "--process-bundled")
+        .help("Include packages the database marks as bundled, which are skipped by default.")
+        .default_value(false)
+        .implicit_value(true);
+    program.add_argument("-N", "--process-non-matching")
+        .help("Process every input file without consulting the database. This disables the SHA-256 "
+              "check.")
+        .default_value(false)
+        .implicit_value(true);
+    program.add_argument("-r", "--rsync")
+        .help("Use rsync for the song packages when the device has it. Requires public-key "
+              "authentication (no password prompt); the mulist itself is always copied with scp.")
+        .default_value(false)
+        .implicit_value(true);
+    program.add_argument("-S", "--staging-dir")
+        .help("Local directory for the built mulist and renamed packages. When given it must "
+              "already exist and be writable. Otherwise a uniquely named '.deploy-rb-*' directory "
+              "is created in the current directory, or in the system temporary directory when the "
+              "current directory is not writable.");
+    program.add_argument("-t", "--type")
+        .default_value(std::string("rb"))
+        .choices("rb", "jbt")
+        .help("Package type selecting the decryption keys: rb or jbt (default: rb).");
+    program.add_argument("-u", "--user")
+        .default_value(std::string("mobile"))
+        .help("SSH user (default: mobile). Overridden by a user given in HOST.");
+    program.add_argument("-v", "--verbose")
+        .help("Report each step.")
         .default_value(false)
         .implicit_value(true);
 
@@ -748,21 +911,64 @@ int main(int argc, char *argv[]) {
         spdlog::set_pattern("%l: %v");
     }
 
-    const std::string uuid = program.get<std::string>("--uuid");
-    const std::string appUuid = program.get<std::string>("--app-uuid");
-    const std::string host = program.get<std::string>("--host");
-    const std::string user = program.get<std::string>("--user");
-    const int port = program.get<int>("--port");
+    const std::string uuid = program.get<std::string>("UUID");
+    // Validate both UUIDs up front so a malformed value fails before any work, including in a dry
+    // run where the device UUID would otherwise only be checked when the key is derived. The device
+    // UUID derives the mulist key; the application UUID names the remote container directory, which
+    // iOS stores in canonical uppercase form, so the canonicalised value is used there.
+    if (const auto canonical = Tools::canonicalizeUuid(uuid); !canonical) {
+        spdlog::error("UUID is not a valid UUID: {}", Tools::message(canonical.error()));
+        return EXIT_FAILURE;
+    }
+    const auto canonicalAppUuid = Tools::canonicalizeUuid(program.get<std::string>("APP-UUID"));
+    if (!canonicalAppUuid) {
+        spdlog::error("APP-UUID is not a valid UUID: {}", Tools::message(canonicalAppUuid.error()));
+        return EXIT_FAILURE;
+    }
+    const std::string appUuid = *canonicalAppUuid;
+    // HOST is a free-form string: a bare hostname or IP address, or a [user[:password]@]host[:port]
+    // URI. Values parsed from the URI take precedence over the --user and --port options.
+    const auto hostInfo = parseHost(program.get<std::string>("HOST"));
+    if (!hostInfo) {
+        spdlog::error("HOST is not a valid host or URI.");
+        return EXIT_FAILURE;
+    }
+    const std::string host = hostInfo->host;
+    const std::string user = hostInfo->user.value_or(program.get<std::string>("--user"));
+    const int port = hostInfo->port.value_or(program.get<int>("--port"));
+    // A password in HOST takes precedence over the --password option.
+    const std::optional<std::string> password =
+        hostInfo->password ? hostInfo->password : program.present<std::string>("--password");
     const std::optional<std::string> identity = program.present<std::string>("--identity");
     const std::string type = program.get<std::string>("--type");
     const bool convertWorld = program.get<bool>("--convert-world");
     const bool processNonMatching = program.get<bool>("--process-non-matching");
     const bool processBundled = program.get<bool>("--process-bundled");
-    const fs::path databasePath = program.get<std::string>("--database");
+    const fs::path databasePath = program.get<std::string>("--db");
     const bool useRsync = program.get<bool>("--rsync");
-    const fs::path staging = program.get<std::string>("--staging-dir");
-    const auto packages = program.get<std::vector<std::string>>("packages");
+    const bool keep = program.get<bool>("--keep");
+    const auto stagingArg = program.present<std::string>("--staging-dir");
+    const auto packages = program.get<std::vector<std::string>>("FILES");
     const std::vector<std::string> keys = candidateKeys(type);
+
+    // A password is fed to ssh and scp through sshpass. That is incompatible with rsync, which uses
+    // key-only authentication, and requires sshpass to be installed and the SSHPASS variable set.
+    const bool usePassword = password.has_value();
+    if (usePassword) {
+        if (useRsync) {
+            spdlog::error("A password cannot be used with --rsync, which requires public-key "
+                          "authentication.");
+            return EXIT_FAILURE;
+        }
+        if (!Tools::findInPath("sshpass")) {
+            spdlog::error("A password was given but sshpass was not found in PATH.");
+            return EXIT_FAILURE;
+        }
+        if (!dryRun && !setPasswordEnv(*password)) {
+            spdlog::error("Cannot set the SSHPASS environment variable.");
+            return EXIT_FAILURE;
+        }
+    }
 
     // The goodrb.json database is the authority for rb packages. --process-non-matching restores
     // the original behaviour of trusting every input file, so the database is not loaded then. jbt
@@ -772,7 +978,7 @@ int main(int argc, char *argv[]) {
     if (useDatabase) {
         database = loadDatabase(databasePath);
         if (!database) {
-            spdlog::error("Pass --database with a valid goodrb.json, or --process-non-matching to "
+            spdlog::error("Pass --db with a valid goodrb.json, or --process-non-matching to "
                           "process files without it.");
             return EXIT_FAILURE;
         }
@@ -785,17 +991,11 @@ int main(int argc, char *argv[]) {
     }
     const unsigned jobs = static_cast<unsigned>(jobsArg);
 
-    if (dryRun) {
-        spdlog::info("Would create staging directory: {}.", staging.string());
-    } else {
-        std::error_code ec;
-        fs::create_directories(staging, ec);
-        if (ec) {
-            spdlog::error("Cannot create staging directory: {}.", staging.string());
-            return EXIT_FAILURE;
-        }
-        spdlog::debug("Staging directory: {}.", staging.string());
+    const auto resolvedStaging = resolveStagingDir(stagingArg, dryRun);
+    if (!resolvedStaging) {
+        return EXIT_FAILURE;
     }
+    const fs::path staging = *resolvedStaging;
 
     // A successfully decrypted package: its mulist <dict> entry, original path, whether it is a
     // world-version package needing conversion, and the matched database entry when the database is
@@ -919,7 +1119,14 @@ int main(int argc, char *argv[]) {
             ++skipped;
             continue;
         }
-        const std::string name = trimmedName(result->package);
+        // With a database match the authoritative id names the on-device file; a world package is
+        // converted to the Japanese release, so its Japanese-equivalent id is used. Without a
+        // database entry (jbt packages, or --process-non-matching) the name is still derived from
+        // the input filename.
+        const std::string name = result->dbEntry ?
+                                     japaneseEquivalentId(*result->dbEntry) +
+                                         toLowerAscii(result->package.extension().string()) :
+                                     trimmedName(result->package);
         const bool isRevision = result->dbEntry && result->dbEntry->isRevision;
         Parsed staged{result->package, result->dictEntry, result->worldVersion, result->dbEntry};
         const auto existing = stagedIndexByName.find(name);
@@ -1028,8 +1235,17 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if (!deploy(
-            encrypted, songPaths, user, host, appUuid, port, identity, useRsync, dryRun, verbose)) {
+    if (!deploy(encrypted,
+                songPaths,
+                user,
+                host,
+                appUuid,
+                port,
+                identity,
+                useRsync,
+                usePassword,
+                dryRun,
+                verbose)) {
         return EXIT_FAILURE;
     }
 
@@ -1074,6 +1290,22 @@ int main(int argc, char *argv[]) {
         const size_t have = haveSongs.size();
         const size_t missing = known > have ? known - have : 0;
         spdlog::info("You are missing {} out of {} known songs.", missing, known);
+    }
+
+    // The staging directory holds the renamed packages and the built mulist; it is removed once
+    // deployment is complete unless --keep is given.
+    if (keep) {
+        spdlog::debug("Keeping staging directory: {}.", staging.string());
+    } else if (dryRun) {
+        spdlog::info("Would remove staging directory: {}.", staging.string());
+    } else {
+        std::error_code ec;
+        fs::remove_all(staging, ec);
+        if (ec) {
+            spdlog::warn("Cannot remove staging directory {}: {}.", staging.string(), ec.message());
+        } else {
+            spdlog::debug("Removed staging directory: {}.", staging.string());
+        }
     }
 
     if (skipped != 0) {
