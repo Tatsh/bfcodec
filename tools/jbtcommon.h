@@ -116,6 +116,12 @@ std::expected<std::vector<std::byte>, FileError> readFileFirst(const fs::path &p
 
 std::expected<std::array<std::byte, 16>, KeyIvError> md5Key(std::span<const std::byte> data);
 
+/**
+ * @brief Compute the SHA-256 of @p data as a lowercase hexadecimal string.
+ * @return The 64-character digest, or nullopt when the platform hash fails.
+ */
+std::optional<std::string> sha256Hex(std::span<const std::byte> data);
+
 std::expected<KeyIv, KeyIvError> getKeyIv(argparse::ArgumentParser &program);
 
 std::expected<BFCodec, BFCodecError> createCodec(const std::vector<std::byte> &keyBytes);
@@ -140,6 +146,13 @@ bool isPngData(std::span<const uint8_t> data);
 bool containsCgbi(std::span<const uint8_t> data);
 
 int runProcess(const std::vector<std::string> &argv);
+
+/**
+ * Find an executable by name on the @c PATH. When \a name already contains a path separator it is
+ * checked directly. On Windows the @c PATHEXT extensions are also tried. Returns the resolved path,
+ * or @c std::nullopt when nothing executable is found.
+ */
+std::optional<std::string> findInPath(const std::string &name);
 
 bool tryPngdefryInPlace(const fs::path &pngPath);
 

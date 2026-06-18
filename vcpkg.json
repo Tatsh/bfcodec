@@ -3,6 +3,7 @@
     "argparse",
     "libplist",
     "libzip",
+    "nlohmann-json",
     "spdlog"
   ],
   "description": "Tools and a C/C++ library to manipulate BFCodec-encrypted content.",

@@ -46,6 +46,12 @@ endif()
 find_package(libzip CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 
+# deploy-rb validates rb packages against the goodrb.json database.
+find_package(nlohmann_json CONFIG REQUIRED)
+
+# deploy-rb processes packages on a thread pool.
+find_package(Threads REQUIRED)
+
 if(NOT APPLE AND NOT WIN32)
   find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 elseif(WIN32)
@@ -54,7 +60,7 @@ endif()
 
 string(TIMESTAMP YEAR "%Y")
 
-add_executable(unjbt unjbt.cpp jbtcommon.cpp)
+add_executable(unjbt unjbt.cpp jbtcommon.cpp jbtarchive.cpp)
 if(WIN32)
   set(ORIGINAL_FILENAME "unjbt")
   configure_file("version.rc.in" unjbt-version.rc @ONLY)
@@ -80,7 +86,7 @@ if(APPLE)
   endif()
 endif()
 
-add_executable(jbt jbt.cpp jbtcommon.cpp)
+add_executable(jbt jbt.cpp jbtcommon.cpp jbtarchive.cpp)
 if(WIN32)
   set(ORIGINAL_FILENAME "jbt")
   configure_file("version.rc.in" jbt-version.rc @ONLY)
@@ -125,14 +131,43 @@ elseif(WIN32)
 endif()
 target_compile_definitions(unbfc PRIVATE BFCODEC_VERSION="${CMAKE_PROJECT_VERSION}")
 
+# deploy-rb builds a complete mulist from song packages and deploys it over SSH. It calls the
+# bfcodec library directly for encryption and decryption and shells out to ssh/scp/rsync through the
+# portable process helpers in jbtcommon, so it needs libzip and (for the info plist) libplist.
+add_executable(deploy-rb deploy-rb.cpp jbtcommon.cpp jbtarchive.cpp)
+if(WIN32)
+  set(ORIGINAL_FILENAME "deploy-rb")
+  configure_file("version.rc.in" deploy-rb-version.rc @ONLY)
+  target_sources(deploy-rb PRIVATE deploy-rb-version.rc)
+endif()
+target_link_libraries(deploy-rb PRIVATE bfcodec argparse::argparse libzip::zip nlohmann_json::nlohmann_json spdlog::spdlog Threads::Threads ${plist_target})
+if(plist_target)
+  target_compile_definitions(deploy-rb PRIVATE HAVE_LIBPLIST)
+endif()
+if(NOT APPLE AND NOT WIN32)
+  target_include_directories(deploy-rb PRIVATE ${OPENSSL_INCLUDE_DIR})
+  target_link_libraries(deploy-rb PRIVATE ${OPENSSL_CRYPTO_LIBRARY})
+elseif(WIN32)
+  target_link_libraries(deploy-rb PRIVATE ${win_crypto_lib})
+endif()
+target_compile_definitions(deploy-rb PRIVATE BFCODEC_VERSION="${CMAKE_PROJECT_VERSION}")
+if(APPLE)
+  find_library(COREFOUNDATION_FRAMEWORK CoreFoundation)
+  if(COREFOUNDATION_FRAMEWORK)
+    target_link_libraries(deploy-rb PRIVATE ${COREFOUNDATION_FRAMEWORK})
+    target_compile_definitions(deploy-rb PRIVATE HAVE_COREFOUNDATION)
+  endif()
+endif()
+
 if(BFCODEC_APPLY_WARN_ALL)
   target_compile_options(unjbt PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
   target_compile_options(jbt PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
   target_compile_options(bfc PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
   target_compile_options(unbfc PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
+  target_compile_options(deploy-rb PRIVATE ${BFCODEC_WARN_ALL_CXX_FLAGS})
 endif()
 
-install(TARGETS unjbt jbt bfc unbfc
+install(TARGETS unjbt jbt bfc unbfc deploy-rb
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   RUNTIME_DEPENDENCY_SET jbt
 )

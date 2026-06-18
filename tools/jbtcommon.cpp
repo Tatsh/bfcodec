@@ -219,6 +219,60 @@ std::expected<std::array<std::byte, 16>, KeyIvError> md5Key(std::span<const std:
 #endif
 }
 
+std::optional<std::string> sha256Hex(std::span<const std::byte> data) {
+    std::array<unsigned char, 32> digest{};
+#if defined(__APPLE__)
+    CC_SHA256(data.data(), static_cast<CC_LONG>(data.size()), digest.data());
+#elif defined(_WIN32)
+    HCRYPTPROV prov = 0;
+    HCRYPTHASH hash = 0;
+    // SHA-256 needs the AES provider; the RSA_FULL provider used for MD5 does not offer it.
+    if (!CryptAcquireContextW(&prov, nullptr, nullptr, PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+        return std::nullopt;
+    }
+    if (!CryptCreateHash(prov, CALG_SHA_256, 0, 0, &hash)) {
+        CryptReleaseContext(prov, 0);
+        return std::nullopt;
+    }
+    if (!CryptHashData(hash,
+                       reinterpret_cast<const BYTE *>(data.data()),
+                       static_cast<DWORD>(data.size()),
+                       0)) {
+        CryptDestroyHash(hash);
+        CryptReleaseContext(prov, 0);
+        return std::nullopt;
+    }
+    DWORD len = 32;
+    if (!CryptGetHashParam(hash, HP_HASHVAL, digest.data(), &len, 0)) {
+        CryptDestroyHash(hash);
+        CryptReleaseContext(prov, 0);
+        return std::nullopt;
+    }
+    CryptDestroyHash(hash);
+    CryptReleaseContext(prov, 0);
+#else
+    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+    if (!ctx) {
+        return std::nullopt;
+    }
+    if (EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr) != 1 ||
+        EVP_DigestUpdate(ctx, data.data(), data.size()) != 1 ||
+        EVP_DigestFinal_ex(ctx, digest.data(), nullptr) != 1) {
+        EVP_MD_CTX_free(ctx);
+        return std::nullopt;
+    }
+    EVP_MD_CTX_free(ctx);
+#endif
+    static constexpr char kHexDigits[] = "0123456789abcdef";
+    std::string out;
+    out.reserve(64);
+    for (const unsigned char b : digest) {
+        out += kHexDigits[b >> 4];
+        out += kHexDigits[b & 0x0F];
+    }
+    return out;
+}
+
 namespace {
 // Keys:
 // - jubeat plus : 'Konami Bemani Mobile iPad' - jubeat
@@ -441,6 +495,39 @@ bool containsCgbi(std::span<const uint8_t> data) {
     return std::search(begin, end, kCgbi.begin(), kCgbi.end()) != end;
 }
 
+#ifdef _WIN32
+namespace {
+// Build the quoted, wide command line CreateProcessW needs from an argv vector. Returns a writable
+// buffer, or std::nullopt when the UTF-8 to UTF-16 conversion fails.
+std::optional<std::vector<wchar_t>> buildCommandLineW(const std::vector<std::string> &argv) {
+    std::string cmdLine;
+    for (size_t i = 0; i < argv.size(); ++i) {
+        if (i != 0) {
+            cmdLine += ' ';
+        }
+        cmdLine += '"';
+        for (char c : argv[i]) {
+            if (c == '"') {
+                cmdLine += "\\\"";
+            } else {
+                cmdLine += c;
+            }
+        }
+        cmdLine += '"';
+    }
+    int wideLen = MultiByteToWideChar(CP_UTF8, 0, cmdLine.c_str(), -1, nullptr, 0);
+    if (wideLen <= 0) {
+        return std::nullopt;
+    }
+    std::vector<wchar_t> cmdLineW(static_cast<size_t>(wideLen));
+    if (MultiByteToWideChar(CP_UTF8, 0, cmdLine.c_str(), -1, cmdLineW.data(), wideLen) == 0) {
+        return std::nullopt;
+    }
+    return cmdLineW;
+}
+} // namespace
+#endif
+
 int runProcess(const std::vector<std::string> &argv) {
     if (argv.empty()) {
         return -1;
@@ -472,29 +559,8 @@ int runProcess(const std::vector<std::string> &argv) {
     }
     return -1;
 #else
-    // Build command line: quote each argument and join with spaces.
-    std::string cmdLine;
-    for (size_t i = 0; i < argv.size(); ++i) {
-        if (i != 0) {
-            cmdLine += ' ';
-        }
-        cmdLine += '"';
-        for (char c : argv[i]) {
-            if (c == '"') {
-                cmdLine += "\\\"";
-            } else {
-                cmdLine += c;
-            }
-        }
-        cmdLine += '"';
-    }
-    // Convert UTF-8 to wide; CreateProcessW requires a writable buffer.
-    int wideLen = MultiByteToWideChar(CP_UTF8, 0, cmdLine.c_str(), -1, nullptr, 0);
-    if (wideLen <= 0) {
-        return -1;
-    }
-    std::vector<wchar_t> cmdLineW(static_cast<size_t>(wideLen));
-    if (MultiByteToWideChar(CP_UTF8, 0, cmdLine.c_str(), -1, cmdLineW.data(), wideLen) == 0) {
+    auto cmdLineW = buildCommandLineW(argv);
+    if (!cmdLineW) {
         return -1;
     }
 
@@ -502,7 +568,7 @@ int runProcess(const std::vector<std::string> &argv) {
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {};
     if (!CreateProcessW(
-            nullptr, cmdLineW.data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi)) {
+            nullptr, cmdLineW->data(), nullptr, nullptr, FALSE, 0, nullptr, nullptr, &si, &pi)) {
         return -1;
     }
     CloseHandle(pi.hThread);
@@ -511,6 +577,98 @@ int runProcess(const std::vector<std::string> &argv) {
     GetExitCodeProcess(pi.hProcess, &exitCode);
     CloseHandle(pi.hProcess);
     return static_cast<int>(exitCode);
+#endif
+}
+
+std::optional<std::string> findInPath(const std::string &name) {
+    if (name.empty()) {
+        return std::nullopt;
+    }
+
+#ifdef _WIN32
+    std::vector<std::string> extensions;
+    if (const char *pathExt = std::getenv("PATHEXT")) {
+        std::string value(pathExt);
+        size_t start = 0;
+        while (start <= value.size()) {
+            const size_t sep = value.find(';', start);
+            std::string ext =
+                (sep == std::string::npos) ? value.substr(start) : value.substr(start, sep - start);
+            if (!ext.empty()) {
+                extensions.push_back(ext);
+            }
+            if (sep == std::string::npos) {
+                break;
+            }
+            start = sep + 1;
+        }
+    }
+    if (extensions.empty()) {
+        extensions = {".COM", ".EXE", ".BAT", ".CMD"};
+    }
+    std::error_code ec;
+    auto firstExisting = [&](const fs::path &base) -> std::optional<std::string> {
+        if (fs::is_regular_file(base, ec)) {
+            return base.string();
+        }
+        for (const auto &ext : extensions) {
+            fs::path candidate = base;
+            candidate += ext;
+            if (fs::is_regular_file(candidate, ec)) {
+                return candidate.string();
+            }
+        }
+        return std::nullopt;
+    };
+    if (name.find('/') != std::string::npos || name.find('\\') != std::string::npos) {
+        return firstExisting(fs::path(name));
+    }
+    if (const char *pathEnv = std::getenv("PATH")) {
+        std::string value(pathEnv);
+        size_t start = 0;
+        while (start <= value.size()) {
+            const size_t sep = value.find(';', start);
+            std::string dir =
+                (sep == std::string::npos) ? value.substr(start) : value.substr(start, sep - start);
+            if (!dir.empty()) {
+                if (auto found = firstExisting(fs::path(dir) / name)) {
+                    return found;
+                }
+            }
+            if (sep == std::string::npos) {
+                break;
+            }
+            start = sep + 1;
+        }
+    }
+    return std::nullopt;
+#else
+    if (name.find('/') != std::string::npos) {
+        return (::access(name.c_str(), X_OK) == 0) ? std::optional<std::string>(name) :
+                                                     std::nullopt;
+    }
+    const char *pathEnv = std::getenv("PATH");
+    if (!pathEnv) {
+        return std::nullopt;
+    }
+    std::string value(pathEnv);
+    size_t start = 0;
+    while (start <= value.size()) {
+        const size_t colon = value.find(':', start);
+        std::string dir =
+            (colon == std::string::npos) ? value.substr(start) : value.substr(start, colon - start);
+        if (!dir.empty()) {
+            fs::path candidate = fs::path(dir) / name;
+            if (::access(candidate.c_str(), X_OK) == 0) {
+                return candidate.string();
+            }
+        }
+        if (colon == std::string::npos) {
+            break;
+        }
+        start = colon + 1;
+    }
+    return std::nullopt;
 #endif
 }
 
