@@ -2,6 +2,10 @@
 
 #include <spdlog/spdlog.h>
 
+#if defined(__APPLE__)
+#include <mach-o/dyld.h>
+#endif
+
 namespace Tools {
 
 std::string message(ParseError e) {
@@ -669,6 +673,46 @@ std::optional<std::string> findInPath(const std::string &name) {
         start = colon + 1;
     }
     return std::nullopt;
+#endif
+}
+
+std::optional<fs::path> executableDirectory() {
+#if defined(_WIN32)
+    std::wstring buffer(MAX_PATH, L'\0');
+    for (;;) {
+        const DWORD length =
+            GetModuleFileNameW(nullptr, buffer.data(), static_cast<DWORD>(buffer.size()));
+        if (length == 0) {
+            return std::nullopt;
+        }
+        if (length < buffer.size()) {
+            buffer.resize(length);
+            break;
+        }
+        // The path did not fit; grow the buffer and try again.
+        buffer.resize(buffer.size() * 2);
+    }
+    return fs::path(buffer).parent_path();
+#elif defined(__APPLE__)
+    uint32_t size = 0;
+    _NSGetExecutablePath(nullptr, &size);
+    std::string buffer(size, '\0');
+    if (_NSGetExecutablePath(buffer.data(), &size) != 0) {
+        return std::nullopt;
+    }
+    std::error_code ec;
+    const fs::path resolved = fs::weakly_canonical(fs::path(buffer.c_str()), ec);
+    if (ec) {
+        return fs::path(buffer.c_str()).parent_path();
+    }
+    return resolved.parent_path();
+#else
+    std::error_code ec;
+    const fs::path exe = fs::read_symlink("/proc/self/exe", ec);
+    if (ec) {
+        return std::nullopt;
+    }
+    return exe.parent_path();
 #endif
 }
 

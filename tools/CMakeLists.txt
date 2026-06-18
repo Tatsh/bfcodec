@@ -151,6 +151,9 @@ elseif(WIN32)
   target_link_libraries(deploy-rb PRIVATE ${win_crypto_lib})
 endif()
 target_compile_definitions(deploy-rb PRIVATE BFCODEC_VERSION="${CMAKE_PROJECT_VERSION}")
+# Default location of the song databases when --db is not given (the FHS data directory).
+target_compile_definitions(deploy-rb
+  PRIVATE BFCODEC_DATA_DIR="${CMAKE_INSTALL_FULL_DATADIR}/bfcodec")
 if(APPLE)
   find_library(COREFOUNDATION_FRAMEWORK CoreFoundation)
   if(COREFOUNDATION_FRAMEWORK)
@@ -186,6 +189,8 @@ else()
     file(CREATE_LINK deploy-rb \"\${_bin_dir}/deploy-jbt\" SYMBOLIC)
   ")
 endif()
+# deploy-rb reads its song databases from the installed data directory by default.
+install(FILES goodrb.json goodjbt.json DESTINATION ${CMAKE_INSTALL_DATADIR}/bfcodec)
 if(WIN32)
   get_filename_component(_compiler_bin_dir ${CMAKE_C_COMPILER} DIRECTORY)
   install(

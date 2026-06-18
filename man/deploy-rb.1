@@ -99,12 +99,15 @@ Re-encrypt world-version packages for the Japanese release instead of skipping t
 .It Fl -db Ar path
 Path to the
 .Pa goodrb.json
-database used to validate
-.Li rb
-packages by SHA-256.
-Default is
-.Pa goodrb.json
-in the current directory.
+.Pq or Pa goodjbt.json
+database used to validate packages by SHA-256.
+By default the database is read from the installed
+.Pa share/bfcodec
+directory, located relative to the executable.
+On a standalone Windows build the current directory is tried first, then
+.Pa share/bfcodec
+beside the executable.
+On Linux and macOS the current directory is never used.
 .It Fl d , Fl -debug
 Enable debug-level logging.
 .It Fl y , Fl -dry-run

@@ -159,6 +159,15 @@ int runProcess(const std::vector<std::string> &argv);
  */
 std::optional<std::string> findInPath(const std::string &name);
 
+/**
+ * @brief Return the directory containing the running executable.
+ *
+ * Uses the platform query (@c GetModuleFileNameW, @c _NSGetExecutablePath, or @c /proc/self/exe),
+ * so it does not depend on @c argv[0] or the current directory. Returns @c std::nullopt when the
+ * path cannot be determined.
+ */
+std::optional<fs::path> executableDirectory();
+
 bool tryPngdefryInPlace(const fs::path &pngPath);
 
 fs::path safeJoinZipPath(const fs::path &root, const std::string &zipName);

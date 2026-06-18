@@ -90,6 +90,38 @@ std::vector<std::string> candidateKeys(const std::string &type) {
     return {kReflecRegularKey, kReflecJpDlcKey, kReflecWorldKey};
 }
 
+// Resolve the default database path for the package type when --db is not given. On Linux, macOS,
+// and MSYS2 the database lives in the FHS data directory (<prefix>/share/bfcodec), located relative
+// to the running executable so relocated installs (such as an AppImage or a MacPorts prefix) still
+// work; the current directory is never consulted. A standalone Windows build instead reads from the
+// current directory first, then falls back to a share/bfcodec directory beside the executable.
+fs::path defaultDatabasePath(const std::string &type) {
+    const std::string dbName = type == "jbt" ? "goodjbt.json" : "goodrb.json";
+    std::error_code ec;
+    std::optional<fs::path> exeShare;
+    if (const auto dir = Tools::executableDirectory()) {
+        exeShare = dir->parent_path() / "share" / "bfcodec" / dbName;
+    }
+#if defined(_WIN32) && !defined(__MINGW32__)
+    if (fs::exists(fs::path(dbName), ec)) {
+        return fs::path(dbName);
+    }
+    if (exeShare && fs::exists(*exeShare, ec)) {
+        return *exeShare;
+    }
+    return fs::path(dbName);
+#else
+    if (exeShare) {
+        return *exeShare;
+    }
+#if defined(BFCODEC_DATA_DIR)
+    return fs::path(BFCODEC_DATA_DIR) / dbName;
+#else
+    return fs::path(dbName);
+#endif
+#endif
+}
+
 // A goodrb.json entry, reduced to the fields deploy-rb consults when deciding how to treat a
 // package.
 struct DatabaseEntry {
@@ -838,10 +870,17 @@ int main(int argc, char *argv[]) {
               "instead of skipping them.")
         .default_value(false)
         .implicit_value(true);
-    program.add_argument("--db")
-        .default_value(std::string("goodrb.json"))
-        .help("Path to the goodrb.json database used to validate rb packages by SHA-256 "
-              "(default: goodrb.json in the current directory).");
+    program.add_argument("--db").help(
+#if defined(_WIN32) && !defined(__MINGW32__)
+        "Path to the goodrb.json (or goodjbt.json) database used to validate packages by SHA-256. "
+        "Defaults to the database in the current directory, then the share/bfcodec directory "
+        "beside "
+        "the executable."
+#else
+        "Path to the goodrb.json (or goodjbt.json) database used to validate packages by SHA-256. "
+        "Defaults to the database in the installed share/bfcodec directory."
+#endif
+    );
     program.add_argument("-d", "--debug")
         .help("Enable debug-level logging.")
         .default_value(false)
@@ -952,7 +991,8 @@ int main(int argc, char *argv[]) {
     const bool convertWorld = program.get<bool>("--convert-world");
     const bool processNonMatching = program.get<bool>("--process-non-matching");
     const bool processBundled = program.get<bool>("--process-bundled");
-    const fs::path databasePath = program.get<std::string>("--db");
+    const auto databaseArg = program.present<std::string>("--db");
+    const fs::path databasePath = databaseArg ? fs::path(*databaseArg) : defaultDatabasePath(type);
     const bool useRsync = program.get<bool>("--rsync");
     const bool keep = program.get<bool>("--keep");
     const auto stagingArg = program.present<std::string>("--staging-dir");
