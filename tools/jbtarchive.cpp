@@ -363,6 +363,10 @@ std::optional<std::string> buildMulistEntry(const std::vector<uint8_t> &info,
     }
     uint64_t id = 0;
     plist_get_uint_val(idNode, &id);
+    // jubeat info uses Name/Artist; REFLEC BEAT uses MusicName/ArtistName. Only jubeat mulist
+    // entries carry holdFlag, detected from the info schema before the dict is freed.
+    const bool isJubeat = plist_dict_get_item(root, "Name") != nullptr &&
+                          plist_dict_get_item(root, "MusicName") == nullptr;
     plist_free(root);
     const std::string url = "https://akx-dl.konami.net/akx/data/" + archivePath.filename().string();
     std::string entry = "\t<dict>\n";
@@ -370,6 +374,12 @@ std::optional<std::string> buildMulistEntry(const std::vector<uint8_t> &info,
     entry += "\t\t<key>ID</key>\n\t\t<integer>" + std::to_string(id) + "</integer>\n";
     entry += "\t\t<key>ItemURL</key>\n\t\t<string>" + xmlEscape(url) + "</string>\n";
     entry += "\t\t<key>Name</key>\n\t\t<string>" + xmlEscape(name) + "</string>\n";
+    // jubeat requires holdFlag: a 3-bit mask, one bit per difficulty (Basic, Advanced, Extreme),
+    // set when that difficulty has hold notes. This cannot be determined from the package, so it is
+    // always written as 0.
+    if (isJubeat) {
+        entry += "\t\t<key>holdFlag</key>\n\t\t<integer>0</integer>\n";
+    }
     entry += "\t</dict>";
     return entry;
 #else
