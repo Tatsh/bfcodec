@@ -31,7 +31,9 @@
       "man/**",
       "*.patch",
       ".docs/*.tag.xml",
-      ".docs/*.tags"
+      ".docs/*.tags",
+      "tools/goodjbt.json",
+      "tools/goodrb.json"
     ],
     "language": "en-GB",
     "languageSettings": [

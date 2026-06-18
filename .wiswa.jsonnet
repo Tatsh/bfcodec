@@ -26,6 +26,8 @@
         '*.patch',
         '.docs/*.tag.xml',
         '.docs/*.tags',
+        'tools/goodjbt.json',
+        'tools/goodrb.json',
       ],
     },
   },
