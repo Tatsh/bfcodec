@@ -11,6 +11,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- New `deploy-rb` tool that builds a complete REFLEC BEAT plus `mulist` from song packages and
+  deploys it, with the packages, to a jailbroken iOS device over SSH. It validates `.rb` packages
+  against a `goodrb.json` database by SHA-256, optionally re-encrypts world-version packages for the
+  Japanese release (`--convert-world`), and copies with `scp` or `rsync` (`--rsync`). The host may
+  be given as a `[user[:password]@]host[:port]` URI, with passwords passed through `sshpass`.
+  Building the tools now also requires nlohmann-json. A `deploy-rb.1` man page is installed. The
+  tool is also installed as `deploy-jbt`, which defaults `--type` to `jbt`.
 - `bfc` and `unbfc` accept a `--uuid` option that derives the key from a device UUID. The supplied
   UUID is normalised to its canonical uppercase `8-4-4-4-12` form before hashing, so dashes and
   letter case are optional and the result matches `MD5(CFUUIDCreateString(...))`. This decrypts

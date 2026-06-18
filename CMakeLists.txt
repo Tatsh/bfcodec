@@ -73,11 +73,26 @@ if(NOT BUILD_DOCS_ONLY)
     add_subdirectory(tools)
     install(FILES
       man/bfc.1
+      man/deploy-rb.1
       man/jbt.1
       man/unbfc.1
       man/unjbt.1
       DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
     )
+    # deploy-jbt shares deploy-rb's man page; install it as a symbolic link, or a copy on Windows
+    # where symlinks need elevated privileges.
+    if(WIN32)
+      install(FILES man/deploy-rb.1
+        DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
+        RENAME deploy-jbt.1)
+    else()
+      install(CODE "
+        set(_man_dir \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_MANDIR}/man1\")
+        message(STATUS \"Installing: \${_man_dir}/deploy-jbt.1 -> deploy-rb.1\")
+        file(REMOVE \"\${_man_dir}/deploy-jbt.1\")
+        file(CREATE_LINK deploy-rb.1 \"\${_man_dir}/deploy-jbt.1\" SYMBOLIC)
+      ")
+    endif()
   endif()
 endif()
 

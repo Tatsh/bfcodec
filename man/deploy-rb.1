@@ -1,0 +1,191 @@
+.\" Copyright (c) 2026 bfcodec authors. License: MIT.
+.Dd June 2026
+.Dt DEPLOY-RB 1
+.Os bfcodec 0.0.6
+.Sh NAME
+.Nm deploy-rb
+.Nd build a REFLEC BEAT plus mulist and deploy it to an iOS device
+.Sh SYNOPSIS
+.Nm
+.Op options
+.Ar HOST
+.Ar APP-UUID
+.Ar UUID
+.Ar FILE ...
+.Sh DESCRIPTION
+.Nm
+builds a complete
+.Pa mulist
+from a set of song packages and deploys it, together with the packages, to a jailbroken iOS device over SSH.
+Only the Japanese release
+.Pq Li jp.konami.rbplus
+is supported as a target.
+.Pp
+When invoked as
+.Nm deploy-jbt
+.Pq normally an installed symbolic link, or a copy on Windows ,
+the package type defaults to
+.Li jbt
+instead of
+.Li rb .
+.Pp
+Each input
+.Ar FILE
+is a BFCodec-encrypted ZIP archive
+.Pq .rb or .jbt .
+For
+.Li rb
+packages the
+.Pa goodrb.json
+database is the authority: every input is matched by its SHA-256, which also selects the single decryption key, and unmatched or undecryptable files are skipped.
+The matched database id, not the input filename, names the file written to the device.
+Packages the database marks as bundled ship inside the app and are skipped unless
+.Fl -process-bundled
+is given.
+.Pp
+World-version
+.Pq Li jp.konami.rbplusw
+packages cannot be read by the supported app.
+They are skipped unless
+.Fl -convert-world
+is given, which re-encrypts them from the world key to the Japanese DLC key.
+When a world package and its Japanese equivalent are both supplied, the Japanese copy is preferred.
+.Pp
+The plaintext mulist has four random bytes prepended and is then encrypted with the key derived from the device
+.Ar UUID
+.Pq the MD5 of its canonical uppercase form
+before being copied to the device.
+.Ar UUID
+and
+.Ar APP-UUID
+must be valid UUIDs; dashes are optional.
+.Ar APP-UUID
+names the per-application container directory under
+.Pa /var/mobile/Containers/Data/Application
+on the device.
+.Pp
+.Ar HOST
+is the SSH host.
+It may be a bare hostname or IP address, or a URI of the form
+.Ql [user[:password]@]host[:port]
+that also sets the user, password, and port.
+Values parsed from the URI take precedence over the
+.Fl -user
+and
+.Fl -port
+options.
+A password is fed to
+.Xr ssh 1
+and
+.Xr scp 1
+through
+.Xr sshpass 1 ,
+which must be installed; it cannot be combined with
+.Fl -rsync .
+.Pp
+The mulist is always copied with
+.Xr scp 1 .
+The song packages also use
+.Xr scp 1
+unless
+.Fl -rsync
+is given and the device has
+.Xr rsync 1 ,
+in which case rsync is used; rsync requires public-key authentication.
+.Sh OPTIONS
+.Bl -tag -width "-N, --process-non-matching"
+.It Fl W , Fl -convert-world
+Re-encrypt world-version packages for the Japanese release instead of skipping them.
+.It Fl -db Ar path
+Path to the
+.Pa goodrb.json
+database used to validate
+.Li rb
+packages by SHA-256.
+Default is
+.Pa goodrb.json
+in the current directory.
+.It Fl d , Fl -debug
+Enable debug-level logging.
+.It Fl y , Fl -dry-run
+Simulate every step, creating no files and only logging commands.
+.It Fl i Ar file , Fl -identity Ar file
+SSH identity
+.Pq private key
+file.
+.It Fl j Ar n , Fl -jobs Ar n
+Number of files to process in parallel.
+Default is the number of CPUs.
+.It Fl K , Fl -keep
+Keep the staging directory after deployment instead of removing it.
+.It Fl p Ar password , Fl -password Ar password
+SSH password, fed to
+.Xr ssh 1
+and
+.Xr scp 1
+through
+.Xr sshpass 1 .
+Overridden by a password given in
+.Ar HOST ;
+incompatible with
+.Fl -rsync .
+.It Fl P Ar port , Fl -port Ar port
+SSH port.
+Default is 22.
+Overridden by a port given in
+.Ar HOST .
+.It Fl B , Fl -process-bundled
+Include packages the database marks as bundled, which are skipped by default.
+.It Fl N , Fl -process-non-matching
+Process every input file without consulting the database.
+This disables the SHA-256 check.
+.It Fl r , Fl -rsync
+Use
+.Xr rsync 1
+for the song packages when the device has it.
+Requires public-key authentication; the mulist itself is always copied with
+.Xr scp 1 .
+.It Fl S Ar dir , Fl -staging-dir Ar dir
+Local directory for the built mulist and renamed packages.
+When given it must already exist and be writable.
+Otherwise a uniquely named
+.Pa .deploy-rb-*
+directory is created in the current directory, or in the system temporary directory when the current directory is not writable.
+.It Fl t Ar type , Fl -type Ar type
+Package type selecting the decryption keys:
+.Li rb
+or
+.Li jbt .
+Default is
+.Li rb .
+.It Fl u Ar user , Fl -user Ar user
+SSH user.
+Default is
+.Li mobile .
+Overridden by a user given in
+.Ar HOST .
+.It Fl v , Fl -verbose
+Report each step.
+.It Fl -help
+Print a help message and exit.
+.It Fl -version
+Print version and exit.
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width "SSHPASS"
+.It Ev SSHPASS
+When a password is supplied, it is exported here for
+.Xr sshpass 1
+so that it never appears on a command line.
+.El
+.Sh EXIT STATUS
+.Ex -std
+.Pp
+A non-zero status is also returned when any input package was skipped.
+.Sh SEE ALSO
+.Xr jbt 1 ,
+.Xr unjbt 1 ,
+.Xr rsync 1 ,
+.Xr scp 1 ,
+.Xr ssh 1 ,
+.Xr sshpass 1

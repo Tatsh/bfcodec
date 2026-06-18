@@ -35,6 +35,7 @@
   cz+: {
     commitizen+: {
       version_files+: [
+        'man/deploy-rb.1',
         'man/jbt.1',
         'man/unjbt.1',
         'sh.tat.bfcodec.yml',

@@ -171,6 +171,21 @@ install(TARGETS unjbt jbt bfc unbfc deploy-rb
   DESTINATION ${CMAKE_INSTALL_BINDIR}
   RUNTIME_DEPENDENCY_SET jbt
 )
+# deploy-jbt is the same binary as deploy-rb; it defaults to the jbt package type when invoked under
+# that name. Install it as a symbolic link where supported, and as a copy on Windows where symlinks
+# need elevated privileges.
+if(WIN32)
+  install(PROGRAMS $<TARGET_FILE:deploy-rb>
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+    RENAME deploy-jbt${CMAKE_EXECUTABLE_SUFFIX})
+else()
+  install(CODE "
+    set(_bin_dir \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}\")
+    message(STATUS \"Installing: \${_bin_dir}/deploy-jbt -> deploy-rb\")
+    file(REMOVE \"\${_bin_dir}/deploy-jbt\")
+    file(CREATE_LINK deploy-rb \"\${_bin_dir}/deploy-jbt\" SYMBOLIC)
+  ")
+endif()
 if(WIN32)
   get_filename_component(_compiler_bin_dir ${CMAKE_C_COMPILER} DIRECTORY)
   install(

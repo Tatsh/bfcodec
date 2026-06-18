@@ -810,6 +810,12 @@ int main(int argc, char *argv[]) {
         hardwareJobs = 1;
     }
 
+    // When invoked as deploy-jbt (an installed symlink, or a copy on Windows), the package type
+    // defaults to jbt instead of rb. The stem is compared so a .exe suffix is ignored.
+    const std::string invokedAs =
+        (argc > 0 && argv[0] != nullptr) ? fs::path(argv[0]).stem().string() : std::string();
+    const std::string defaultType = invokedAs.ends_with("deploy-jbt") ? "jbt" : "rb";
+
     argparse::ArgumentParser program("deploy-rb");
     program.add_description(
         "Build a complete mulist from song packages and deploy it to an iOS device over SSH.\n\n"
@@ -880,9 +886,10 @@ int main(int argc, char *argv[]) {
               "is created in the current directory, or in the system temporary directory when the "
               "current directory is not writable.");
     program.add_argument("-t", "--type")
-        .default_value(std::string("rb"))
+        .default_value(defaultType)
         .choices("rb", "jbt")
-        .help("Package type selecting the decryption keys: rb or jbt (default: rb).");
+        .help("Package type selecting the decryption keys: rb or jbt. Defaults to jbt when invoked "
+              "as deploy-jbt, otherwise rb.");
     program.add_argument("-u", "--user")
         .default_value(std::string("mobile"))
         .help("SSH user (default: mobile). Overridden by a user given in HOST.");
