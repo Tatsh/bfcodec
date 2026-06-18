@@ -775,7 +775,8 @@ void parallelFor(size_t count, unsigned jobs, Fn fn) {
     if (count == 0) {
         return;
     }
-    const unsigned workers = std::max(1u, std::min<unsigned>(jobs, static_cast<unsigned>(count)));
+    const unsigned workers =
+        std::max<unsigned>(1u, std::min<unsigned>(jobs, static_cast<unsigned>(count)));
     if (workers == 1) {
         for (size_t i = 0; i < count; ++i) {
             fn(i);

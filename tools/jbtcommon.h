@@ -30,6 +30,11 @@
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
 #endif
+// Stop <windows.h> from defining the min and max function-like macros, which would otherwise break
+// std::min and std::max calls in any translation unit that includes this header.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 
 #include <wincrypt.h>
