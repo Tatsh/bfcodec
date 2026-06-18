@@ -70,6 +70,7 @@ ifdef
 ifndef
 iiiiiihhh
 includedir
+infov
 instdir
 interprocedural
 iwyu
@@ -166,6 +167,7 @@ wiswa's
 worktree
 xcrun
 yarnrc
+yomi
 zipcmp
 zipinfo
 zipmerge
