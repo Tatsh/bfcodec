@@ -6357,6 +6357,19 @@
     },
     {
       "artist": {
+        "": "CHERRY BLOSSOMS (ASAKI ",
+        "hira": "チェリーブロッサムズアサキアンドワック"
+      },
+      "id": "100040002",
+      "key_type": 1,
+      "sha256": "212f9654168fccbe0e20627ffedddbfaf89cceda2d49971d298e3feaa6f7e7a4",
+      "title": {
+        "": "I LOVE SAKURA",
+        "hira": "アイラブサクラ"
+      }
+    },
+    {
+      "artist": {
         "": "DJ YOSHITAKA",
         "hira": "ディージェイヨシタカ"
       },
