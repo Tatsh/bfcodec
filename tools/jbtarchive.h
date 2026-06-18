@@ -19,6 +19,14 @@ std::optional<std::vector<uint8_t>> readZipEntry(const std::filesystem::path &ar
                                                  const char *entryName);
 
 /**
+ * Read the metadata entry from a package, preferring the newer @c infov2 over @c info. The two
+ * share the same plist schema; newer jubeat packages ship only @c infov2, while older packages and
+ * REFLEC BEAT packages use @c info. Returns the raw (still encrypted) bytes, or @c std::nullopt
+ * when neither entry is present.
+ */
+std::optional<std::vector<uint8_t>> readInfoEntry(const std::filesystem::path &archivePath);
+
+/**
  * Parse the BFCodec on-disk trailer that bfc appends ([fileSize:4 BE][blockSize:4 BE]).
  *
  * @param raw The whole entry, including the eight-byte trailer.

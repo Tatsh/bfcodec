@@ -49,6 +49,15 @@ std::optional<std::vector<uint8_t>> readZipEntry(const std::filesystem::path &ar
     return buf;
 }
 
+std::optional<std::vector<uint8_t>> readInfoEntry(const std::filesystem::path &archivePath) {
+    // Newer jubeat packages ship only infov2; it has the same schema as info and takes precedence
+    // when both are present.
+    if (auto raw = readZipEntry(archivePath, "infov2")) {
+        return raw;
+    }
+    return readZipEntry(archivePath, "info");
+}
+
 std::optional<std::pair<size_t, size_t>> bfcEntryLengths(std::span<const uint8_t> raw) {
     if (raw.size() < 8) {
         return std::nullopt;
@@ -338,11 +347,14 @@ std::optional<std::string> buildMulistEntry(const std::vector<uint8_t> &info,
         }
         return std::string();
     };
-    // Artist uses the native ArtistName (the on-device mulist stores artist names in their
-    // native/kanji form); Name likewise prefers the native MusicName, falling back to the Roman
-    // reading and then Hira.
-    const std::string artist = firstNonEmpty({"ArtistName", "ArtistNameRoman", "ArtistNameHira"});
-    const std::string name = firstNonEmpty({"MusicName", "MusicNameRoman", "MusicNameHira"});
+    // Artist and Name use the native form the on-device mulist stores. REFLEC BEAT exposes them as
+    // ArtistName / MusicName (with Roman and Hira readings); jubeat (jbt) uses Artist / Name. jbt's
+    // NameYomi is a phonetic reading for Japanese sorting, not a display title, so it is not used
+    // here. Both key schemes are tried, so either package type populates the entry.
+    const std::string artist =
+        firstNonEmpty({"ArtistName", "ArtistNameRoman", "ArtistNameHira", "Artist"});
+    const std::string name =
+        firstNonEmpty({"MusicName", "MusicNameRoman", "MusicNameHira", "Name"});
     plist_t idNode = plist_dict_get_item(root, "ID");
     if (!idNode || plist_get_node_type(idNode) != PLIST_UINT) {
         plist_free(root);

@@ -344,7 +344,7 @@ struct ExtractedEntry {
 // nullopt when no candidate key decrypts the package; the last diagnostic is surfaced as a warning.
 std::optional<ExtractedEntry> extractEntry(const fs::path &package,
                                            const std::vector<std::string> &keys) {
-    const auto raw = Tools::readZipEntry(package, "info");
+    const auto raw = Tools::readInfoEntry(package);
     std::string lastError;
     for (const auto &key : keys) {
         spdlog::debug("Trying key '{}' for {}.", key, package.filename().string());

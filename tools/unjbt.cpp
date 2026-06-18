@@ -435,11 +435,11 @@ void decryptExtractedFiles(const fs::path &outDir,
     }
 }
 
-// Read and decrypt the archive's `info` entry, then print the mulist <dict> entry built from it.
+// Read and decrypt the archive's info entry, then print the mulist <dict> entry built from it.
 int printMulistEntry(const fs::path &archivePath, BFCodec &codec, const Tools::KeyIv &keyIv) {
-    auto raw = Tools::readZipEntry(archivePath, "info");
+    auto raw = Tools::readInfoEntry(archivePath);
     if (!raw) {
-        spdlog::error("Cannot read 'info' entry from archive.");
+        spdlog::error("Cannot read 'info' or 'infov2' entry from archive.");
         return EXIT_FAILURE;
     }
     auto dec = Tools::decryptBfcEntry(*raw, codec, keyIv.ivBytes);
