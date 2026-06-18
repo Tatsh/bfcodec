@@ -12,7 +12,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Install deps
-        run: brew install libplist libzip spdlog
+        run: brew install libplist libzip nlohmann-json spdlog
       - env:
           BUILD_TYPE: ${{ matrix.build-type }}
         run: |
@@ -79,6 +79,7 @@ jobs:
             libplist:p
             libzip:p
             ninja:p
+            nlohmann-json:p
             ${{ matrix.sys.name == 'clangarm64' && ' ' || 'nsis:p' }}
             spdlog:p
             toolchain:p
@@ -267,7 +268,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libplist-dev libspdlog-dev libssl-dev libzip-dev tree zipcmp zipmerge ziptool
+          sudo apt-get install -y libplist-dev libspdlog-dev libssl-dev libzip-dev nlohmann-json3-dev tree zipcmp zipmerge ziptool
       - name: Configure
         env:
           BUILD_TYPE: ${{ matrix.build-type }}
