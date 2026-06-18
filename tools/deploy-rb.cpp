@@ -85,7 +85,7 @@ std::string toLowerAscii(std::string s) {
 // keys are part of the passphrase, not punctuation.
 std::vector<std::string> candidateKeys(const std::string &type) {
     if (type == "jbt") {
-        return {"Konami Bemani Mobile iPad", "jubeatskmpledata", "Konami Bemani Mobile iOS"};
+        return {"Konami Bemani Mobile iPad", "Konami Bemani Mobile iOS", "jubeatskmpledata"};
     }
     return {kReflecRegularKey, kReflecJpDlcKey, kReflecWorldKey};
 }
@@ -194,10 +194,16 @@ std::string japaneseEquivalentId(const DatabaseEntry &entry) {
     return entry.id;
 }
 
-// Return the single passphrase the database indicates for a package: the lovers key for world
-// packages, otherwise the regular or DLC key selected by key_type. Decrypting with this one key is
-// sufficient, so trialing every candidate is unnecessary when the database matched the file.
-std::string keyForEntry(const DatabaseEntry &entry) {
+// Return the single passphrase the database indicates for a package, so a matched file can be
+// decrypted without trialing every candidate. For jbt the key_type is an index into the jbt key
+// list. For rb it selects the lovers key for world packages, otherwise the regular or DLC key by
+// key_type.
+std::string keyForEntry(const DatabaseEntry &entry, const std::string &type) {
+    if (type == "jbt") {
+        const std::vector<std::string> keys = candidateKeys("jbt");
+        const auto index = static_cast<size_t>(entry.keyType);
+        return index < keys.size() ? keys[index] : keys.front();
+    }
     if (entry.world) {
         return kReflecWorldKey;
     }
@@ -1018,15 +1024,15 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // The goodrb.json database is the authority for rb packages. --process-non-matching restores
-    // the original behaviour of trusting every input file, so the database is not loaded then. jbt
-    // packages are never validated against it.
-    const bool useDatabase = type == "rb" && !processNonMatching;
+    // The database (goodrb.json for rb, goodjbt.json for jbt) is the authority: it matches each
+    // file by SHA-256 and selects its decryption key. --process-non-matching restores the original
+    // behaviour of trusting every input file, so the database is not loaded then.
+    const bool useDatabase = !processNonMatching;
     std::optional<Database> database;
     if (useDatabase) {
         database = loadDatabase(databasePath);
         if (!database) {
-            spdlog::error("Pass --db with a valid goodrb.json, or --process-non-matching to "
+            spdlog::error("Pass --db with a valid database, or --process-non-matching to "
                           "process files without it.");
             return EXIT_FAILURE;
         }
@@ -1090,7 +1096,7 @@ int main(int argc, char *argv[]) {
                 return;
             }
             const DatabaseEntry &entry = it->second;
-            const std::string key = keyForEntry(entry);
+            const std::string key = keyForEntry(entry, type);
             auto extracted = extractEntry(package, {key});
             if (!extracted) {
                 spdlog::warn("{} did not decrypt with its database key '{}'; bad file. Skipping.",
