@@ -5,7 +5,7 @@ jobs:
       options: '--privileged'
     runs-on: '${{ matrix.system.image }}'
     steps:
-      - uses: 'actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0'
+      - uses: 'actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1'
         with:
           persist-credentials: false
       - id: 'flatpak_bundle'
@@ -27,12 +27,12 @@ jobs:
           name: 'sh.tat.bfcodec-${{ steps.flatpak_bundle.outputs.version }}-${{ matrix.system.arch }}'
           path: '${{ steps.flatpak_bundle.outputs.filename }}'
       - name: 'Attest'
-        uses: 'actions/attest@a1948c3f048ba23858d222213b7c278aabede763'
+        uses: 'actions/attest@f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6'
         with:
           subject-path: '${{ steps.flatpak_bundle.outputs.filename }}'
       - if: "github.ref_type == 'tag'"
         name: 'Upload package'
-        uses: 'softprops/action-gh-release@718ea10b132b3b2eba29c1007bb80653f286566b'
+        uses: 'softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228'
         with:
           draft: true
           fail_on_unmatched_files: true
