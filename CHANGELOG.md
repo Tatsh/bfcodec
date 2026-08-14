@@ -17,7 +17,9 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Japanese release (`--convert-world`), and copies with `scp` or `rsync` (`--rsync`). The host may
   be given as a `[user[:password]@]host[:port]` URI, with passwords passed through `sshpass`.
   Building the tools now also requires nlohmann-json. A `deploy-rb.1` man page is installed. The
-  tool is also installed as `deploy-jbt`, which defaults `--type` to `jbt`.
+  tool is also installed as `deploy-jbt`, which defaults `--type` to `jbt`. The `mulist` is always
+  copied to `Documents` in the application container; `rb` packages go to
+  `Library/Private Documents` and `jbt` packages go to `Documents`.
 - `bfc` and `unbfc` accept a `--uuid` option that derives the key from a device UUID. The supplied
   UUID is normalised to its canonical uppercase `8-4-4-4-12` form before hashing, so dashes and
   letter case are optional and the result matches `MD5(CFUUIDCreateString(...))`. This decrypts

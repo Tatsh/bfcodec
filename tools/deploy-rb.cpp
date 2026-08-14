@@ -645,6 +645,7 @@ bool copyToRemote(const std::vector<fs::path> &sources,
 // Create the remote directories and copy the mulist and song packages into the container.
 bool deploy(const fs::path &mulistPath,
             const std::vector<fs::path> &songPaths,
+            const std::string &type,
             const std::string &user,
             const std::string &host,
             const std::string &appUuid,
@@ -658,12 +659,15 @@ bool deploy(const fs::path &mulistPath,
     const std::string container = kRemoteContainerRoot + "/" + appUuid;
     const std::string documents = container + "/Documents";
     const std::string privateDocuments = container + "/Library/Private Documents";
+    // jubeat reads its packages from Documents, while REFLEC BEAT plus reads them from the private
+    // Documents directory. The mulist itself always belongs in Documents.
+    const std::string songDirectory = type == "jbt" ? documents : privateDocuments;
     // Opting into rsync also commits to public-key authentication, since rsync's own ssh cannot
     // answer a password prompt.
     const std::vector<std::string> &authOptions = useRsync ? kKeyOnlySshOptions : kSshAuthOptions;
 
-    // A single mkdir -p ensures both destinations exist. The paths are passed as separate arguments
-    // because the remote shell, not this process, splits the command.
+    // A single mkdir -p ensures every destination exists. The paths are passed as separate
+    // arguments because the remote shell, not this process, splits the command.
     std::vector<std::string> mkdir = {"ssh"};
     const std::vector<std::string> prefix = sshPrefix("-p", port, identity, authOptions);
     mkdir.insert(mkdir.end(), prefix.begin(), prefix.end());
@@ -671,7 +675,9 @@ bool deploy(const fs::path &mulistPath,
     mkdir.push_back("mkdir");
     mkdir.push_back("-p");
     mkdir.push_back(documents);
-    mkdir.push_back(privateDocuments);
+    if (songDirectory != documents) {
+        mkdir.push_back(songDirectory);
+    }
     if (!runCommand(withPassword(mkdir, usePassword), dryRun, verbose)) {
         return false;
     }
@@ -700,7 +706,7 @@ bool deploy(const fs::path &mulistPath,
             }
         }
         if (!copyToRemote(songPaths,
-                          privateDocuments,
+                          songDirectory,
                           target,
                           port,
                           identity,
@@ -1323,6 +1329,7 @@ int main(int argc, char *argv[]) {
 
     if (!deploy(encrypted,
                 songPaths,
+                type,
                 user,
                 host,
                 appUuid,

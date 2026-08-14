@@ -63,6 +63,17 @@ must be valid UUIDs; dashes are optional.
 names the per-application container directory under
 .Pa /var/mobile/Containers/Data/Application
 on the device.
+The mulist is copied to
+.Pa Documents
+inside that container.
+.Li rb
+packages are copied to
+.Pa Library/Private Documents ,
+while
+.Li jbt
+packages are copied to
+.Pa Documents
+alongside the mulist.
 .Pp
 .Ar HOST
 is the SSH host.
