@@ -75,6 +75,35 @@ std::optional<size_t> packArchive(const std::filesystem::path &srcDir,
 std::string xmlEscape(std::string_view text);
 
 /**
+ * Compute the mulist @c holdFlag for a jubeat package: a bit per difficulty that has hold notes,
+ * 1 for basic, 2 for advanced, and 4 for extreme.
+ *
+ * This is what the game itself records after a download. It decrypts @c seq_bas , @c seq_adv , and
+ * @c seq_ext with the same key the metadata entry uses, requires the @c IJSQ chart magic, and walks
+ * the eight-byte event records for an event whose kind byte is 6. A chart carrying either of the
+ * other two accepted magics, @c IJBQ or @c JBSQ , is reported as hold-free without its events being
+ * read, which matches the game and is not a shortcut: no chart in either of those formats carries a
+ * hold event.
+ *
+ * A converted package can ship its charts unencrypted, so an entry with no BFCodec trailer is read
+ * as a chart directly rather than skipped. The magic check applies either way, which is what makes
+ * that safe.
+ *
+ * Logs the difficulties it found at info level, and warns when no chart could be read at all: a
+ * package whose charts are in an unexpected format would otherwise be indistinguishable from one
+ * that genuinely has no holds.
+ *
+ * @param archivePath The package to inspect.
+ * @param codec A codec whose key has already been expanded.
+ * @param iv The eight-byte initialisation vector.
+ * @return The bitmask, which is zero when the package has no charts, none of them is readable, or
+ * none contains a hold event.
+ */
+unsigned int holdMarkerFlag(const std::filesystem::path &archivePath,
+                            BFCodec &codec,
+                            std::span<const std::byte, 8> iv);
+
+/**
  * Build a mulist @c <dict> entry from a decrypted @c info plist.
  *
  * Name and Artist prefer the native field and fall back to the Roman reading and then Hira; ID is
@@ -83,12 +112,16 @@ std::string xmlEscape(std::string_view text);
  *
  * @param info The decrypted @c info entry (binary or XML plist).
  * @param archivePath The package whose filename forms the ItemURL.
+ * @param holdFlag The mask from @c holdMarkerFlag ; written only for a jubeat package, whose
+ * metadata schema is recognised by its @c Name key. Pass 0 for a package that has no charts to
+ * inspect.
  * @param error Set to the reason on failure (for example a malformed dictionary or missing libplist
  * support).
  * @return The entry text, or @c std::nullopt on failure.
  */
 std::optional<std::string> buildMulistEntry(const std::vector<uint8_t> &info,
                                             const std::filesystem::path &archivePath,
+                                            unsigned int holdFlag,
                                             std::string &error);
 
 } // namespace Tools

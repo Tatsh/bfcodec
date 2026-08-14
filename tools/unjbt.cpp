@@ -447,8 +447,9 @@ int printMulistEntry(const fs::path &archivePath, BFCodec &codec, const Tools::K
         spdlog::error("Cannot decrypt 'info' entry (wrong key?).");
         return EXIT_FAILURE;
     }
+    const unsigned int holdFlag = Tools::holdMarkerFlag(archivePath, codec, keyIv.ivBytes);
     std::string error;
-    auto entry = Tools::buildMulistEntry(*dec, archivePath, error);
+    auto entry = Tools::buildMulistEntry(*dec, archivePath, holdFlag, error);
     if (!entry) {
         spdlog::error("{}", error);
         return EXIT_FAILURE;

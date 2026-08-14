@@ -368,8 +368,12 @@ std::optional<ExtractedEntry> extractEntry(const fs::path &package,
             lastError = "Cannot decrypt 'info' entry (wrong key?).";
             continue;
         }
+        // The charts use the same key as the metadata entry, so the codec that just decrypted the
+        // latter reads them too. A package with no jubeat charts yields 0, which is what a REFLEC
+        // BEAT package wants and is dropped from its entry anyway.
+        const unsigned int holdFlag = Tools::holdMarkerFlag(package, *codec, Tools::kDefaultIv);
         std::string error;
-        auto dictEntry = Tools::buildMulistEntry(*decrypted, package, error);
+        auto dictEntry = Tools::buildMulistEntry(*decrypted, package, holdFlag, error);
         if (!dictEntry) {
             lastError = error;
             continue;

@@ -1,7 +1,10 @@
 #include "jbtarchive.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdlib>
+#include <cstring>
+#include <string>
 
 #include <spdlog/spdlog.h>
 #include <zip.h>
@@ -306,8 +309,116 @@ std::string xmlEscape(std::string_view text) {
     return out;
 }
 
+namespace {
+
+// The chart entries a jubeat package carries, paired with the holdFlag bit each one sets.
+constexpr std::array<std::pair<const char *, unsigned int>, 3> kChartEntries = {
+    {{"seq_bas", 1}, {"seq_adv", 2}, {"seq_ext", 4}}};
+
+// Only a chart in the IJSQ format is examined; see holdMarkerFlag's documentation.
+constexpr std::array<uint8_t, 4> kHoldChartMagic = {'I', 'J', 'S', 'Q'};
+
+// The difficulty each holdFlag bit stands for, for logging.
+constexpr std::array<std::pair<const char *, unsigned int>, 3> kDifficultyNames = {
+    {{"basic", 1}, {"advanced", 2}, {"extreme", 4}}};
+// The header is 0x60 bytes and the event count is the word after the magic. Each event record that
+// follows is eight bytes whose first byte is the kind.
+constexpr size_t kChartHeaderSize = 0x60;
+constexpr size_t kChartEventCountOffset = 4;
+constexpr size_t kChartEventSize = 8;
+constexpr uint8_t kChartEventHold = 6;
+
+// Whether the buffer opens with the chart magic that carries hold events. The other two magics the
+// game's loader accepts, IJBQ and JBSQ, are chart formats too, but its hold check rejects them
+// before reading any event and no chart in either format carries one.
+bool hasChartMagic(const std::vector<uint8_t> &chart) {
+    return chart.size() >= kChartHeaderSize &&
+           std::equal(kHoldChartMagic.begin(), kHoldChartMagic.end(), chart.begin());
+}
+
+// Render a holdFlag as the difficulties it names, for a log line.
+std::string describeDifficulties(unsigned int flag) {
+    std::string out;
+    for (const auto &[name, bit] : kDifficultyNames) {
+        if ((flag & bit) != 0) {
+            if (!out.empty()) {
+                out += '+';
+            }
+            out += name;
+        }
+    }
+    return out;
+}
+
+bool chartHasHold(const std::vector<uint8_t> &chart) {
+    if (!hasChartMagic(chart)) {
+        return false;
+    }
+    uint32_t eventCount = 0;
+    std::memcpy(&eventCount, chart.data() + kChartEventCountOffset, sizeof(eventCount));
+    if (eventCount == 0) {
+        return false;
+    }
+    // The game sizes this bound in 32 bits and lets the product wrap, so a chart claiming an absurd
+    // event count is rejected by the length check rather than trusted.
+    const uint32_t required = static_cast<uint32_t>(eventCount * kChartEventSize) +
+                              static_cast<uint32_t>(kChartHeaderSize);
+    if (chart.size() < required) {
+        return false;
+    }
+    for (uint32_t i = 0; i < eventCount; ++i) {
+        if (chart[kChartHeaderSize + i * kChartEventSize] == kChartEventHold) {
+            return true;
+        }
+    }
+    return false;
+}
+
+} // namespace
+
+unsigned int holdMarkerFlag(const std::filesystem::path &archivePath,
+                            BFCodec &codec,
+                            std::span<const std::byte, 8> iv) {
+    unsigned int flag = 0;
+    unsigned int examined = 0;
+    for (const auto &[entryName, bit] : kChartEntries) {
+        auto raw = readZipEntry(archivePath, entryName);
+        if (!raw) {
+            continue;
+        }
+        // A converted package can ship its charts unencrypted, in which case there is no trailer to
+        // decrypt and the raw bytes already are the chart. Falling back to them is safe because the
+        // magic is checked either way, and ciphertext that happens to begin with the chart magic is
+        // not a case worth guarding against.
+        auto decrypted = decryptBfcEntry(*raw, codec, iv);
+        const std::vector<uint8_t> &chart = decrypted ? *decrypted : *raw;
+        if (!hasChartMagic(chart)) {
+            continue;
+        }
+        ++examined;
+        if (chartHasHold(chart)) {
+            flag |= bit;
+        }
+    }
+    if (examined == 0) {
+        spdlog::warn("{}: no chart could be read, so its holdFlag is reported as 0 rather than "
+                     "determined. A wrong key or an unexpected chart format would look like this.",
+                     archivePath.filename().string());
+    } else if (flag != 0) {
+        spdlog::info("{}: holds in {} (holdFlag {}).",
+                     archivePath.filename().string(),
+                     describeDifficulties(flag),
+                     flag);
+    } else {
+        spdlog::debug(
+            "{}: no holds in any of its {} chart(s).", archivePath.filename().string(), examined);
+    }
+    return flag;
+}
+
 std::optional<std::string> buildMulistEntry(const std::vector<uint8_t> &info,
                                             const std::filesystem::path &archivePath,
+                                            unsigned int holdFlag,
                                             std::string &error) {
 #ifdef HAVE_LIBPLIST
     plist_t root = nullptr;
@@ -375,10 +486,11 @@ std::optional<std::string> buildMulistEntry(const std::vector<uint8_t> &info,
     entry += "\t\t<key>ItemURL</key>\n\t\t<string>" + xmlEscape(url) + "</string>\n";
     entry += "\t\t<key>Name</key>\n\t\t<string>" + xmlEscape(name) + "</string>\n";
     // jubeat requires holdFlag: a 3-bit mask, one bit per difficulty (Basic, Advanced, Extreme),
-    // set when that difficulty has hold notes. This cannot be determined from the package, so it is
-    // always written as 0.
+    // set when that difficulty has hold notes. The caller reads it out of the package's own charts
+    // with holdMarkerFlag, which is what the game does after a download.
     if (isJubeat) {
-        entry += "\t\t<key>holdFlag</key>\n\t\t<integer>0</integer>\n";
+        entry +=
+            "\t\t<key>holdFlag</key>\n\t\t<integer>" + std::to_string(holdFlag) + "</integer>\n";
     }
     entry += "\t</dict>";
     return entry;
