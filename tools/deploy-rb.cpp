@@ -85,7 +85,7 @@ std::string toLowerAscii(std::string s) {
 // keys are part of the passphrase, not punctuation.
 std::vector<std::string> candidateKeys(const std::string &type) {
     if (type == "jbt") {
-        return {"Konami Bemani Mobile iPad", "Konami Bemani Mobile iOS", "jubeatskmpledata"};
+        return {"Konami Bemani Mobile iPad", "Konami Bemani Mobile iOS"};
     }
     return {kReflecRegularKey, kReflecJpDlcKey, kReflecWorldKey};
 }

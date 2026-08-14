@@ -279,9 +279,13 @@ std::optional<std::string> sha256Hex(std::span<const std::byte> data) {
 
 namespace {
 // Keys:
-// - jubeat plus : 'Konami Bemani Mobile iPad' - jubeat
-// - Unknown - 'jubeatskmpledata'
-// - maybe Jukebeat - 'Konami Bemani Mobile iOS'
+// - jubeat plus : 'Konami Bemani Mobile iPad' - jubeat. Everything inside a song package except
+//   infov3: info, infov2, seq_bas, seq_adv, seq_ext, bgm, artwork, artwork_s, name_b, name_w, and
+//   index.
+// - jubeat plus : 'jubeatskmpledata' - the resource-data key. Challenge resources, marker archives,
+//   and the logo; nothing inside a song package, so deploy-rb does not trial it.
+// - jubeat plus : 'Konami Bemani Mobile iOS' - the tune-info key, which is what the newer infov3
+//   metadata entry uses.
 // - REFLEC BEAT plus - 'Konami ReflecBeat For iOS.' (DecodeType 0, bundled content)
 // - REFLEC BEAT plus - 'Konami ReflecBeatplus.' (DecodeType 1, DLC/downloaded .rb songs)
 // - Unknown - REFLEC BEAT US version
