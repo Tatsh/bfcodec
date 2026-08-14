@@ -61,6 +61,10 @@ std::optional<std::vector<uint8_t>> readInfoEntry(const std::filesystem::path &a
     return readZipEntry(archivePath, "info");
 }
 
+bool hasInfoV2Entry(const std::filesystem::path &archivePath) {
+    return readZipEntry(archivePath, "infov2").has_value();
+}
+
 std::optional<std::pair<size_t, size_t>> bfcEntryLengths(std::span<const uint8_t> raw) {
     if (raw.size() < 8) {
         return std::nullopt;

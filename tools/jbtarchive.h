@@ -27,6 +27,19 @@ std::optional<std::vector<uint8_t>> readZipEntry(const std::filesystem::path &ar
 std::optional<std::vector<uint8_t>> readInfoEntry(const std::filesystem::path &archivePath);
 
 /**
+ * Report whether a package carries the newer @c infov2 metadata entry rather than the legacy
+ * @c info one.
+ *
+ * Two packages of the same song can differ only in this, the newer one having been reissued with
+ * re-encoded charts and sometimes English title art. Both trim to the same on-device name, so one
+ * has to be chosen, and the @c infov2 copy is the later of the two.
+ *
+ * @param archivePath The package to inspect.
+ * @return @c true when @c infov2 is present, which is the entry @c readInfoEntry would return.
+ */
+bool hasInfoV2Entry(const std::filesystem::path &archivePath);
+
+/**
  * Parse the BFCodec on-disk trailer that bfc appends ([fileSize:4 BE][blockSize:4 BE]).
  *
  * @param raw The whole entry, including the eight-byte trailer.

@@ -1056,13 +1056,20 @@ int main(int argc, char *argv[]) {
     const fs::path staging = *resolvedStaging;
 
     // A successfully decrypted package: its mulist <dict> entry, original path, whether it is a
-    // world-version package needing conversion, and the matched database entry when the database is
-    // the authority.
+    // world-version package needing conversion, whether it carries the newer infov2 metadata entry,
+    // and the matched database entry when the database is the authority.
     struct Parsed {
         fs::path package;
         std::string dictEntry;
         bool worldVersion;
+        bool hasInfoV2;
         std::optional<DatabaseEntry> dbEntry;
+    };
+
+    // Only jubeat packages have two metadata generations, so this is asked of them alone; an rb
+    // package has neither entry and the preference it feeds is inert for one.
+    const auto infoV2Present = [&type](const fs::path &package) {
+        return type == "jbt" && Tools::hasInfoV2Entry(package);
     };
 
     // Phase A: extract and decrypt every package in parallel. The entry is read from the original
@@ -1108,15 +1115,19 @@ int main(int argc, char *argv[]) {
                              key);
                 return;
             }
-            parsed[i] = Parsed{package, extracted->dictEntry, entry.world, entry};
+            parsed[i] =
+                Parsed{package, extracted->dictEntry, entry.world, infoV2Present(package), entry};
         } else {
             // Without the database, every candidate key is trialed as before.
             auto extracted = extractEntry(package, keys);
             if (!extracted) {
                 return;
             }
-            parsed[i] = Parsed{
-                package, extracted->dictEntry, extracted->key == kReflecWorldKey, std::nullopt};
+            parsed[i] = Parsed{package,
+                               extracted->dictEntry,
+                               extracted->key == kReflecWorldKey,
+                               infoV2Present(package),
+                               std::nullopt};
         }
     });
 
@@ -1186,16 +1197,33 @@ int main(int argc, char *argv[]) {
                                          toLowerAscii(result->package.extension().string()) :
                                      trimmedName(result->package);
         const bool isRevision = result->dbEntry && result->dbEntry->isRevision;
-        Parsed staged{result->package, result->dictEntry, result->worldVersion, result->dbEntry};
+        Parsed staged{result->package,
+                      result->dictEntry,
+                      result->worldVersion,
+                      result->hasInfoV2,
+                      result->dbEntry};
         const auto existing = stagedIndexByName.find(name);
         if (existing != stagedIndexByName.end()) {
             const size_t idx = existing->second;
             const bool existingIsRevision =
                 toStage[idx].dbEntry && toStage[idx].dbEntry->isRevision;
-            // A revision wins over its original; otherwise the first staged file is kept.
+            // A revision wins over its original. Failing that, a jubeat package carrying infov2
+            // wins over one still carrying the legacy info entry: the two are the same song reissued
+            // with re-encoded charts and sometimes English title art, they trim to the same
+            // on-device name, and only the database's revision_of records which is which -- for the
+            // 27 pairs it covers. The metadata generation is readable from every package, so it
+            // settles the rest. Without either signal the first staged file is kept, which is
+            // whatever the input order happened to put first.
+            const char *reason = nullptr;
             if (isRevision && !existingIsRevision) {
-                spdlog::warn("Package {} is a revision of {}; preferring it over the earlier copy.",
+                reason = "is a revision of";
+            } else if (!existingIsRevision && result->hasInfoV2 && !toStage[idx].hasInfoV2) {
+                reason = "carries infov2 where the earlier copy of";
+            }
+            if (reason != nullptr) {
+                spdlog::warn("Package {} {} {}; preferring it over the earlier copy.",
                              result->package.filename().string(),
+                             reason,
                              name);
                 toStage[idx] = std::move(staged);
                 songPaths[idx] = staging / name;
