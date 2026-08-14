@@ -11,9 +11,16 @@
 .pnp.*
 /.bash_profile
 /.bashrc
+/.claude/auto-continue.md
 /.claude/commands
 /.claude/hooks
+/.claude/hooks/inject-standing-instructions.sh
+/.claude/hooks/log-stop-failure.sh
+/.claude/hooks/remind-on-prompt.sh
+/.claude/session-recover.js
 /.claude/settings.local.json
+/.claude/standing-instructions.md
+/.claude/statusline-quota-cache.sh
 /.deploy-rb*/
 /.gitconfig
 /.gitmodules
@@ -26,8 +33,10 @@
 /.zprofile
 /.zshrc
 /CMakeUserPresets.json
+/HANDOFF.md
 /build/
 /dist/
+/session-recover.yaml
 /vcpkg_installed/
 mulist*
 node_modules/
