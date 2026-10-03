@@ -144,7 +144,6 @@ shlex
 shlib
 snapcore
 snapcraft
-softprops
 sshpass
 startupinfow
 statusline
