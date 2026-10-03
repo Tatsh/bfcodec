@@ -22,6 +22,7 @@ cgbi
 choco
 clangarm
 commitizen
+concrt
 corefoundation
 coveragerc
 coverallsapp
@@ -101,6 +102,9 @@ mdfile
 memcpy
 mktemp
 msvc
+msvcp
+msvcprtd
+msvcrtd
 msys
 msystem
 mulist
@@ -153,12 +157,16 @@ tostring
 trialed
 trialing
 ucrt
+ucrtbased
 udvare
 unbfc
 undecryptable
 undraft
 undrafted
 unjbt
+vccorlib
+vcomp
+vcruntime
 vedantmgoyal
 vendored
 venv
