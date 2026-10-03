@@ -1,6 +1,5 @@
 aclocal
 advapi
-Ångström
 appdir
 appimage
 argparse
@@ -23,7 +22,6 @@ cgbi
 choco
 clangarm
 commitizen
-cooldown
 corefoundation
 coveragerc
 coverallsapp
@@ -109,8 +107,10 @@ mulist
 mypy
 ndebug
 nlohmann
+noone
 nsis
 nullptr
+numpydoc
 objc
 oneline
 pacboy
@@ -164,12 +164,12 @@ vedantmgoyal
 vendored
 venv
 versioninfo
+werror
 weverything
 winarm
 winget
 wiswa
 wiswa's
-worktree
 xcrun
 yarnrc
 yomi
@@ -179,3 +179,4 @@ zipmerge
 ziptool
 zizmor
 zstd
+Ångström

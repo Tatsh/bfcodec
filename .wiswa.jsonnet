@@ -44,7 +44,17 @@
     },
   },
   vcpkg+: {
-    dependencies+: ['argparse', 'libplist', 'libzip', 'spdlog'],
+    dependencies+: ['argparse', 'libplist', 'libzip', 'nlohmann-json', 'spdlog'],
+  },
+  gitignore+: ['/.deploy-rb*/'],
+  github+: {
+    zizmor+: {
+      rules+: {
+        'superfluous-actions': {
+          ignore: ['flatpak.yml'],
+        },
+      },
+    },
   },
   vscode+: {
     c_cpp+: {

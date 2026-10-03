@@ -6,7 +6,7 @@ jobs:
         with:
           persist-credentials: false
       - name: 'Check formatting (clang-format)'
-        run: 'clang-format --dry-run include/*.h src/*.c* tools/*.c* tools/*.h'
+        run: 'clang-format --dry-run --Werror include/*.h src/*.c* tools/*.c* tools/*.h'
 name: 'clang-format'
 'on':
   pull_request:
