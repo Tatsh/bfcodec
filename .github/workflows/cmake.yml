@@ -1,6 +1,11 @@
 ---
+concurrency:
+  cancel-in-progress: false
+  group: '${{ github.workflow }}-${{ github.ref }}'
+  queue: 'max'
 jobs:
   build-macos:
+    name: Build (macOS)
     runs-on: ${{ matrix.os }}
     permissions:
       attestations: write
@@ -53,6 +58,7 @@ jobs:
         build-type: [Debug, Release]
         os: [macos-latest, macos-15-intel]
   build-msys:
+    name: Build (MSYS2)
     runs-on: ${{ matrix.sys.runner }}
     permissions:
       attestations: write
@@ -194,6 +200,7 @@ jobs:
             release: true
             runner: windows-11-arm
   build-msvc:
+    name: Build (MSVC)
     runs-on: ${{ matrix.sys.runner }}
     permissions:
       attestations: write
@@ -313,6 +320,7 @@ jobs:
             cmake_arch: ARM64
             runner: windows-11-arm
   build-linux:
+    name: Build (Linux)
     runs-on: ${{ matrix.arch.runner }}
     permissions:
       attestations: write

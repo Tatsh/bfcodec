@@ -1,6 +1,10 @@
 ---
+concurrency:
+  cancel-in-progress: true
+  group: '${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}'
 jobs:
   tests:
+    name: Tests
     permissions:
       contents: write
     runs-on: ubuntu-latest
@@ -14,22 +18,28 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y lcov libplist-dev libspdlog-dev libssl-dev libzip-dev nlohmann-json3-dev zipcmp zipmerge ziptool
       - name: Configure
+        env:
+          BUILD_TYPE: ${{ matrix.build-type }}
         run: >-
-          cmake -DCMAKE_BUILD_TYPE=${{matrix.build-type}} -B ${{github.workspace}}/build
-          --install-prefix ${{github.workspace}}/build/prefix
+          cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -B "$GITHUB_WORKSPACE/build"
+          --install-prefix "$GITHUB_WORKSPACE/build/prefix"
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
           -DBUILD_TESTS=ON
           -DCOVERAGE=ON
       - name: Build
-        run: cmake --build ${{github.workspace}}/build --verbose --config ${{matrix.build-type}}
+        env:
+          BUILD_TYPE: ${{ matrix.build-type }}
+        run: cmake --build "$GITHUB_WORKSPACE/build" --verbose --config "$BUILD_TYPE"
       - name: Install
-        run: cmake --install ${{github.workspace}}/build --config ${{matrix.build-type}} --verbose
+        env:
+          BUILD_TYPE: ${{ matrix.build-type }}
+        run: cmake --install "$GITHUB_WORKSPACE/build" --config "$BUILD_TYPE" --verbose
       - name: Run tests
-        run: ctest --test-dir ${{github.workspace}}/build/tests
+        run: ctest --test-dir "$GITHUB_WORKSPACE/build/tests"
       - if: ${{ matrix.build-type == 'Debug' }}
         name: Generate coverage information
         run: >-
-          lcov -c -d ${{github.workspace}}/build -o coverage1.lcov
+          lcov -c -d "$GITHUB_WORKSPACE/build" -o coverage1.lcov
           --exclude build
           --omit-lines '^\}$'
           --exclude tests
