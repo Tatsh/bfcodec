@@ -101,6 +101,7 @@ mandir
 mdfile
 memcpy
 mktemp
+msix
 msvc
 msvcp
 msvcprtd
