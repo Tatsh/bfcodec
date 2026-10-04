@@ -141,6 +141,7 @@ regen
 retval
 rhythmin
 ripgreprc
+sbclaude
 schemafile
 scoreable
 shctx

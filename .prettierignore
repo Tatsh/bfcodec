@@ -50,6 +50,7 @@
 /.mcp.json
 /.profile
 /.ripgreprc
+/.sbclaude-venv/
 /.wiswa-ci/
 /.yarn/**/*.cjs
 /.yarn/install-state.gz
