@@ -119,6 +119,7 @@ numpydoc
 objc
 oneline
 pacboy
+pipx
 pngcrush
 pngdefry
 pngfix
