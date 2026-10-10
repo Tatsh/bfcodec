@@ -29,6 +29,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `bfc` and `unbfc` accept a `-o`/`--output` option that writes the result to a given path
   instead of overwriting the input.
 
+### Fixed
+
+- Tools in macOS release archives (`jbt`, `unjbt`, and others) now run without Homebrew. Bundled
+  libraries in `lib/` (including `libfmt.12.dylib`, previously omitted) use `@rpath` install names,
+  and the tools load them instead of the Homebrew copies.
+
 ## [0.0.6] - 2026-05-10
 
 ### Changed

@@ -219,9 +219,20 @@ elseif(APPLE)
     PRE_EXCLUDE_REGEXES
     "."
     PRE_INCLUDE_REGEXES
-    "spdlog|plist|zip|zlib|zstd|lzma|bz2"
+    "spdlog|fmt|plist|zip|zlib|zstd|lzma|bz2"
     DIRECTORIES
     ${CMAKE_INSTALL_PREFIX}/bin
     ${_macports_dir}
     ${_homebrew_dir})
+  find_program(OTOOL otool REQUIRED)
+  find_program(CODESIGN codesign)
+  install(CODE "
+    set(BUNDLE_PREFIX \"\$ENV{DESTDIR}\${CMAKE_INSTALL_PREFIX}\")
+    set(BUNDLE_BIN_DIR \"${CMAKE_INSTALL_BINDIR}\")
+    set(BUNDLE_LIB_DIR \"${CMAKE_INSTALL_LIBDIR}\")
+    set(OTOOL \"${OTOOL}\")
+    set(INSTALL_NAME_TOOL \"${CMAKE_INSTALL_NAME_TOOL}\")
+    set(CODESIGN \"${CODESIGN}\")
+    include(\"${CMAKE_SOURCE_DIR}/cmake/MacOSBundleFixup.cmake\")
+  ")
 endif()

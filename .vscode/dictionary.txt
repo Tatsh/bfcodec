@@ -21,6 +21,7 @@ cfuuid
 cgbi
 choco
 clangarm
+codesign
 commitizen
 concrt
 corefoundation
@@ -44,6 +45,8 @@ docstrings
 drwxr
 dspdlog
 efgh
+endforeach
+endfunction
 esac
 esbenp
 exdir
@@ -89,6 +92,7 @@ lbfcodec
 ldflags
 libcommon
 libera
+libfmt
 libplist
 libsonnet
 libspdlog
@@ -98,6 +102,7 @@ lzma
 macports
 mainpage
 mandir
+matchall
 mdfile
 memcpy
 mktemp
@@ -118,6 +123,7 @@ nullptr
 numpydoc
 objc
 oneline
+otool
 pacboy
 pipx
 pngcrush
