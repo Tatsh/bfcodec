@@ -24,12 +24,12 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libplist-dev libspdlog-dev libssl-dev libzip-dev nlohmann-json3-dev zipcmp zipmerge ziptool
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee
+        uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370
         with:
           build-mode: ${{ matrix.build-mode }}
           languages: ${{ matrix.language }}
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee
+        uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370
         with:
           category: /language:${{matrix.language}}
     strategy:
