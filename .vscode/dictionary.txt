@@ -25,6 +25,7 @@ clangarm
 codesign
 commitizen
 concrt
+copytree
 corefoundation
 coveragerc
 coverallsapp
@@ -80,7 +81,6 @@ includedir
 infov
 instdir
 interprocedural
-iterdir
 iwyu
 jbsq
 jbtarchive
@@ -153,6 +153,7 @@ regen
 retval
 rhythmin
 ripgreprc
+rmtree
 sbclaude
 schemafile
 scoreable
@@ -161,6 +162,7 @@ shellcheck
 shellformat
 shlex
 shlib
+shutil
 snapcore
 snapcraft
 sshpass
