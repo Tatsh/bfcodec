@@ -1,5 +1,6 @@
 aclocal
 advapi
+analyzer
 appdir
 appimage
 argparse
@@ -45,6 +46,7 @@ docstrings
 drwxr
 dspdlog
 efgh
+elif
 endforeach
 endfunction
 esac
@@ -78,6 +80,7 @@ includedir
 infov
 instdir
 interprocedural
+iterdir
 iwyu
 jbsq
 jbtarchive
@@ -117,6 +120,7 @@ mulist
 mypy
 ndebug
 nlohmann
+nojekyll
 noone
 nsis
 nullptr
@@ -125,6 +129,7 @@ objc
 oneline
 otool
 pacboy
+pathlib
 pipx
 pngcrush
 pngdefry
