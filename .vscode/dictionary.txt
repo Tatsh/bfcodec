@@ -130,6 +130,7 @@ oneline
 otool
 pacboy
 pathlib
+pipefail
 pipx
 pngcrush
 pngdefry

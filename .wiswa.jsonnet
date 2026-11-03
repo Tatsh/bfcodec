@@ -89,7 +89,9 @@
           run: 'cmake --build "$GITHUB_WORKSPACE/build" --verbose --config Release --target docs',
         },
       ],
-      env: {},
+      env: {
+        CMAKE_PREFIX_PATH: '${{ github.workspace }}/.wiswa-ci/scan-build/prefix',
+      },
       setup_steps: [
         {
           name: 'Install build dependencies',
@@ -101,6 +103,18 @@
         {
           name: 'Install current CMake',
           run: 'pipx install cmake',
+        },
+        {
+          name: 'Build spdlog with bundled fmt for Clang',
+          run: |||
+            git clone --revision=486b55554f11c9cccc913e11a87085b2a91f706f \
+              https://github.com/gabime/spdlog .wiswa-ci/scan-build/spdlog
+            cmake -S .wiswa-ci/scan-build/spdlog -B .wiswa-ci/scan-build/spdlog-build \
+              -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="$CMAKE_PREFIX_PATH" \
+              -DSPDLOG_BUILD_EXAMPLE=OFF -DSPDLOG_FMT_EXTERNAL=OFF
+            cmake --build .wiswa-ci/scan-build/spdlog-build --parallel 2
+            cmake --install .wiswa-ci/scan-build/spdlog-build
+          |||,
         },
       ],
       workflow_file: 'pages.yml',
