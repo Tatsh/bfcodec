@@ -145,6 +145,7 @@ pyproject
 rbff
 rbplus
 rbplusw
+rdparty
 rect
 reflec
 reflecbea
@@ -154,6 +155,7 @@ retval
 rhythmin
 ripgreprc
 rmtree
+sarif
 sbclaude
 schemafile
 scoreable
