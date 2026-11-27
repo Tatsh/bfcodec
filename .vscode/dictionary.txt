@@ -1,6 +1,5 @@
 aclocal
 advapi
-analyzer
 appdir
 appimage
 argparse
@@ -25,7 +24,6 @@ clangarm
 codesign
 commitizen
 concrt
-copytree
 corefoundation
 coveragerc
 coverallsapp
@@ -47,7 +45,6 @@ docstrings
 drwxr
 dspdlog
 efgh
-elif
 endforeach
 endfunction
 esac
@@ -129,8 +126,6 @@ objc
 oneline
 otool
 pacboy
-pathlib
-pipefail
 pipx
 pngcrush
 pngdefry
@@ -154,7 +149,6 @@ regen
 retval
 rhythmin
 ripgreprc
-rmtree
 sarif
 sbclaude
 schemafile
@@ -164,7 +158,6 @@ shellcheck
 shellformat
 shlex
 shlib
-shutil
 snapcore
 snapcraft
 sshpass
